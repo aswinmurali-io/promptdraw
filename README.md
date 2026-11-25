@@ -186,6 +186,10 @@ save your settings as JSON and your workflows as YAML, then open them on the oth
 
 Working on promptdraw itself? `CLAUDE.md` and `lat.md/` hold the conventions and design notes.
 
+Want an AI agent to write workflows for you? The [`promptdraw` skill](.claude/skills/promptdraw/SKILL.md)
+teaches Claude Code (and other agents that read skills) to write and validate Stages-tab YAML
+directly, then open it in the app.
+
 ## 🙏 Credits
 
 Design inspired by open-source whiteboard tools. promptdraw is an original app; see

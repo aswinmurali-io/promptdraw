@@ -8,7 +8,7 @@ Configuration lives in the `test` block of [[vite.config.ts]]; [[src/test/setup.
 
 [[scripts/workflow-tool.ts]] is a developer and AI helper for writing workflow YAML by hand; it reads the live core, so it never goes stale.
 
-Run with `npx vite-node scripts/workflow-tool.ts`: `constants` prints allowed values, defaults, templates and toggles; `starters` and `example <key>` show the built-in workflows as YAML; `validate <file>` reports parse warnings and whether the file survives a round trip; `prompt <file>` prints the compiled prompt. The `promptdraw` skill in `.claude/skills/` drives it.
+Run with `npx vite-node scripts/workflow-tool.ts`: `constants` prints allowed values, defaults, templates and toggles; `starters` and `example <key>` show the built-in workflows as YAML; `validate <file>` reports parse warnings and whether the file survives a round trip; `prompt <file>` prints the compiled prompt. The `promptdraw` skill, committed at `.claude/skills/promptdraw/SKILL.md`, drives it so agents in a clone can write workflows without the UI.
 
 ## Ported unit tests
 

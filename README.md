@@ -6,6 +6,8 @@
 
 **Sketch your agent's workflow on a whiteboard, from a one-liner to a multi-stage pipeline with loops, parallel reviewers and A/B your workflows, then copy a ready-to-paste prompt, all in your browser with no account and no backend.**
 
+**[▶ Try it live: aswinmurali-io.github.io/promptdraw](https://aswinmurali-io.github.io/promptdraw/)**
+
 <a href="public/intro.mp4"><img src="https://github.com/user-attachments/assets/3aef00ec-5a98-4f23-befd-957d29b84435" alt="30-second tour: a vague chat prompt becomes a Goal card, options are ticked, a workflow is drawn with parallel reviewers, an agentic loop and an A/B flag, then the prompt is copied" width="100%" /></a>
 
 <sub>▶ <a href="public/intro.mp4">Watch the 30-second intro (MP4)</a></sub>

@@ -38,6 +38,8 @@ export interface InspectorProps {
   onWidth: (w: number) => void;
   /** "+ Branch": open the add menu (stage entries only) under this button. */
   onAddBranch: (anchor: HTMLElement, par: string) => void;
+  /** The git, worktree, commit and Unity settings, shown under an Intentions block's toggles. */
+  settings?: ReactNode;
 }
 
 /** How long the panel takes to fold away after a click elsewhere (ms); matches `insp-out`. */
@@ -105,7 +107,7 @@ function useCollapseOnOutside(node: React.RefObject<HTMLElement | null>, open: b
   }, [open, node]);
 }
 
-export function Inspector({ ctl, width, onWidth, onAddBranch }: InspectorProps) {
+export function Inspector({ ctl, width, onWidth, onAddBranch, settings }: InspectorProps) {
   const { selection, scene } = ctl;
   const focus = selection.focus;
   const windowW = useWindowWidth();
@@ -154,7 +156,7 @@ export function Inspector({ ctl, width, onWidth, onAddBranch }: InspectorProps) 
       } else if (b.type === "intentions") sub = "The prompt's “How to work” section";
       else if (b.type === "prompt") sub = w || "Added at this point in the flow";
       else sub = w || null;
-      body = <BlockForm key={b.id} ctl={ctl} b={b} setFirst={setFirst} />;
+      body = <BlockForm key={b.id} ctl={ctl} b={b} setFirst={setFirst} settings={settings} />;
     }
   } else if (focus.kind === "loop") {
     const l = wf.loop(focus.id);
@@ -383,7 +385,7 @@ function DangerZone({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-function BlockForm({ ctl, b, setFirst }: { ctl: StagesController; b: Block; setFirst: SetFirst }) {
+function BlockForm({ ctl, b, setFirst, settings }: { ctl: StagesController; b: Block; setFirst: SetFirst; settings?: ReactNode }) {
   const { wf } = ctl.scene;
   const d = ctl.workflow;
   const id = b.id;
@@ -429,6 +431,16 @@ function BlockForm({ ctl, b, setFirst }: { ctl: StagesController; b: Block; setF
         <IntentionsForm block={b} onChange={(values: AnyState, c) => ctl.change(E.setIntentions(d, id, values), c ? ck(c) : undefined)} />
       </Section>
     );
+    // The Settings panel's git, worktree, commit and Unity groups live here on the Stages tab.
+    if (settings)
+      form = (
+        <>
+          {form}
+          <Section title="Workspace & Unity">
+            <div className="insp-settings">{settings}</div>
+          </Section>
+        </>
+      );
   } else if (b.type === "function") {
     form = <FunctionForm ctl={ctl} b={b} setFirst={setFirst} />;
   } else {

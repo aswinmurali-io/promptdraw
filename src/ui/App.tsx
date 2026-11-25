@@ -10,6 +10,7 @@ import { MainMenu } from "./components/MainMenu";
 import { OptionLanes } from "./components/OptionLanes";
 import { OutputPanel } from "./components/OutputPanel";
 import { PropertiesPanel } from "./components/PropertiesPanel";
+import { WorkspaceSettings } from "./components/WorkspaceSettings";
 import { ShortcutsDialog } from "./components/ShortcutsDialog";
 import { StagesMount } from "./components/StagesMount";
 import { Inspector } from "./stages/Inspector";
@@ -31,7 +32,7 @@ import { applyTheme, nextTheme } from "./lib/theme";
 import { hasPrefs, introDue, loadPrefs, loadStored, markIntroSeen, savePrefs, useAutosave, type Prefs } from "./state/persistence";
 import { IntroDialog } from "./components/IntroDialog";
 import { isTyping } from "./lib/keys";
-import { useStore } from "./state/store";
+import { useStore, type WorkspaceKey } from "./state/store";
 import { useStages, type ConfirmRequest } from "./stages/useStages";
 import { gapsLabel, promptGaps, type PromptGap } from "./lib/gaps";
 import { ZOOM_MAX as STAGE_ZOOM_MAX, ZOOM_MIN as STAGE_ZOOM_MIN, stepZoom, zoomAt } from "./stages/viewport";
@@ -205,6 +206,12 @@ export function App() {
     onFlagMode: (flag_mode) => dispatch({ type: "set", patch: { flag_mode } }),
   });
   const onStages = cfg.tab === "stages";
+  // On Stages a workflow with an Intentions block keeps the settings in that block's inspector,
+  // so Settings (3) opens it there instead of the floating panel.
+  const intentionsId = onStages ? (stages.scene.wf.intentions()?.id ?? null) : null;
+  const setWorkspace = (key: WorkspaceKey, value: string, coalesce?: string) => dispatch({ type: "workspace", key, value, coalesce });
+  const propsShown = showProps && intentionsId === null;
+  const intentionsOpen = intentionsId !== null && stages.selection.focus?.kind === "block" && stages.selection.focus.id === intentionsId;
   const promptShown = showOutput && (onStages || taskPrompt);
   const canMoveFocused = (d: -1 | 1): boolean => {
     const f = stages.selection.focus;
@@ -306,13 +313,16 @@ export function App() {
     cfg,
     canUndo: state.past.length > 0,
     canRedo: state.future.length > 0,
-    showProps,
+    showProps: intentionsId !== null ? intentionsOpen : showProps,
     showOutput: promptShown,
     hasPrompt: !!shownPrompt,
     copied,
     setTab: (tab) => set({ tab }),
     // On narrow screens the panels overlay the canvas, so only one is open at a time.
-    toggleProps: () => patchPrefs((p) => (!p.showProps && narrow() ? { showProps: true, showOutput: false } : { showProps: !p.showProps })),
+    toggleProps: () => {
+      if (intentionsId !== null) return stages.setFocus(intentionsOpen ? null : { kind: "block", id: intentionsId });
+      patchPrefs((p) => (!p.showProps && narrow() ? { showProps: true, showOutput: false } : { showProps: !p.showProps }));
+    },
     showWork: !onStages && !promptShown && !prefs.workClosed,
     toggleWork: () => {
       if (promptShown) {
@@ -493,11 +503,11 @@ export function App() {
       className="app"
       data-work={onStages || promptShown ? undefined : prefs.workClosed ? "closed" : "open"}
       data-mode={cfg.tab}
-      data-props={showProps ? "open" : "closed"}
+      data-props={propsShown ? "open" : "closed"}
       data-output={promptShown ? "open" : "closed"}
       data-demos={(onStages && stages.blank && !promptShown && !stages.selection.focus) || undefined}
       // Any panel open (on phones each is a bottom sheet, and the stage bar steps aside).
-      data-sheet={showProps || promptShown || (onStages && !!stages.selection.focus) || undefined}
+      data-sheet={propsShown || promptShown || (onStages && !!stages.selection.focus) || undefined}
       data-dragging={dragging}
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes("Files")) return;
@@ -561,6 +571,7 @@ export function App() {
           ctl={stages}
           width={cfg.inspector_w}
           onWidth={(inspector_w) => dispatch({ type: "set", patch: { inspector_w }, record: false })}
+          settings={<WorkspaceSettings cfg={cfg} set={set} setWorkspace={setWorkspace} />}
           onAddBranch={(el, par) => {
             const r = el.getBoundingClientRect();
             stages.openMenu({ x: r.left, y: r.bottom + 6, label: "Add branch", items: addMenuItems(stages, { par }, false) });
@@ -574,11 +585,11 @@ export function App() {
           task={{ task: cfg.task, extra: cfg.extra, taskRef, onTask: (task) => set({ task }, "task"), onExtra: (extra) => set({ extra }, "extra") }}
           hidden={promptShown} closed={prefs.workClosed} onClose={() => patchPrefs({ workClosed: true })} cfg={cfg} set={set} state={promptState} onToggle={onToggle} onReset={() => setDialog({ kind: "reset" })} />}
 
-      {showProps && (
+      {propsShown && (
         <PropertiesPanel
           cfg={cfg}
           set={set}
-          setWorkspace={(key, value, coalesce) => dispatch({ type: "workspace", key, value, coalesce })}
+          setWorkspace={setWorkspace}
           onClose={() => patchPrefs({ showProps: false })}
         />
       )}

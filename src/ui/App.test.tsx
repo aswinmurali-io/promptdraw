@@ -348,6 +348,31 @@ describe("keyboard shortcuts and dialogs", () => {
     expect(screen.getByRole("main", { name: "Task prompt canvas" })).toBeInTheDocument();
   });
 
+  // @lat: [[ui#Tests#Settings live in the Intentions block on Stages]]
+  it("keeps the Stages settings in the Intentions inspector, and Settings opens it", () => {
+    localStorage.setItem("promptdraw:config", JSON.stringify({ tab: "stages", workflow: { name: "w", goal: "g", blocks: [{ id: "intentions", type: "intentions", toggles: [] }] } }));
+    render(<App />);
+    expect(document.querySelector(".settings-panel")).toBeNull();
+    fireEvent.keyDown(document.body, { key: "3" });
+    const insp = screen.getByRole("heading", { name: "Intentions" }).closest("aside") as HTMLElement;
+    expect(within(insp).getByRole("heading", { name: "Workspace & Unity" })).toBeInTheDocument();
+    fireEvent.click(within(insp).getByRole("radio", { name: "Create new branch" }));
+    expect(output()).toContain("Create a new branch");
+    fireEvent.click(within(insp).getByRole("radio", { name: /Spawn a Unity editor/ }));
+    expect(output()).toMatch(/spawn/i);
+    expect(document.querySelector(".settings-panel")).toBeNull();
+    fireEvent.keyDown(document.body, { key: "3" });
+    expect(screen.queryByRole("heading", { name: "Intentions" })).toBeNull();
+  });
+
+  it("falls back to the Settings panel on a workflow without an Intentions block", () => {
+    localStorage.setItem("promptdraw:config", JSON.stringify({ tab: "stages" }));
+    render(<App />);
+    if (!document.querySelector(".settings-panel")) fireEvent.keyDown(document.body, { key: "3" });
+    expect(document.querySelector(".settings-panel")).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Intentions" })).toBeNull();
+  });
+
   it("undoes and redoes outside text fields", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Push PR/ }));

@@ -549,6 +549,15 @@ describe("main menu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
+  it("opens the GitHub repository in a new tab from Star on GitHub", () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    render(<App />);
+    fireEvent.click(within(openMenu()).getByRole("menuitem", { name: /Star on GitHub/ }));
+    expect(open).toHaveBeenCalledWith("https://github.com/aswinmurali-io/promptdraw", "_blank", "noopener,noreferrer");
+    expect(screen.queryByRole("menu")).toBeNull();
+    open.mockRestore();
+  });
+
   it("resets task, notes and toggles after confirmation", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Task"), { target: { value: "something" } });

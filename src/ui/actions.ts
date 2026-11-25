@@ -5,6 +5,7 @@
 import { TOGGLE_ORDER, TOGGLE_TEXT, type AppConfig, type ThemeMode, type ToggleKey } from "../core";
 import type { IconName } from "./components/Icon";
 import { isTyping, keyLabel, matches, type KeySpec } from "./lib/keys";
+import { REPO_URL } from "./lib/ribbon";
 import { toggleBlocked } from "./lib/rules";
 import { THEME_LABEL } from "./lib/theme";
 
@@ -138,6 +139,7 @@ export function buildActions(c: ActionContext): AppAction[] {
         perform: () => c.setTheme(mode),
       }),
     ),
+    { id: "help.star", label: "Star on GitHub", hint: "Open the promptdraw repository in a new tab", category: "Help", icon: "star", keywords: ["github", "repository", "source", "code", "star", "support"], perform: () => void window.open(REPO_URL, "_blank", "noopener,noreferrer") },
     { id: "help.shortcuts", label: "Keyboard shortcuts", category: "Help", icon: "keyboard", keys: [{ key: "?" }], keywords: ["help", "keys"], perform: c.openShortcuts },
   ];
   if (c.openPalette)

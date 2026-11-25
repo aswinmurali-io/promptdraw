@@ -1,4 +1,4 @@
-// Top-left hamburger island: file commands, help, Reset and the theme switch, all from the
+// Top-left hamburger island: file commands, help (and Star on GitHub), Reset and the theme switch, all from the
 // action registry. Opens a dropdown island; Escape, an outside click or running an item
 // closes it. Arrow keys move between items (WAI-ARIA menu button pattern).
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -9,7 +9,7 @@ import "../styles/menu.css";
 
 const GROUPS: string[][] = [
   ["file.open", "file.saveConfig", "file.exportWorkflow", "file.exportPrompt"],
-  ["help.palette", "help.shortcuts", "help.welcome", "help.intro"],
+  ["help.palette", "help.shortcuts", "help.welcome", "help.intro", "help.star"],
   ["file.reset"],
 ];
 const THEMES = ["view.theme.light", "view.theme.dark", "view.theme.auto"];

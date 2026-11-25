@@ -8,6 +8,7 @@ import {
   DEFAULT_STATE,
   EXTRA_SETTINGS,
   LEGACY_KEYS,
+  OFF,
   SETTINGS,
   TOGGLE_ORDER,
   UNITY_EXISTING,
@@ -74,23 +75,29 @@ export function buildPrompt(stateIn: AnyState): BuildResult {
     sections.push("task");
   }
 
+  // promptdraw: `off` leaves the branch, worktree or Unity lines out of the prompt.
   const base = pyStrip(textOf(need(state, "base")));
   const branch = need(state, "branch");
   const worktree = need(state, "worktree");
   const workspace: string[] = [];
-  if (base) workspace.push(fill(pick(BRANCH_WITH_BASE, branch, "branch"), { base }));
-  else workspace.push(pick(BRANCH, branch, "branch"));
-  workspace.push(pick(WORKTREE, worktree, "worktree"));
+  if (branch !== OFF) {
+    if (base) workspace.push(fill(pick(BRANCH_WITH_BASE, branch, "branch"), { base }));
+    else workspace.push(pick(BRANCH, branch, "branch"));
+  }
+  if (worktree !== OFF) workspace.push(pick(WORKTREE, worktree, "worktree"));
   if (worktree === "per_task" && truthy(getOr(state, "copy_env", true))) workspace.push(WORKTREE_COPY_ENV);
   workspace.push(pick(COMMIT, need(state, "commit"), "commit"));
   parts.push("## Workspace & git\n\n" + workspace.map((l) => "- " + l).join("\n"));
   sections.push("git");
 
-  const unity = [need(state, "unity") === "spawn" ? UNITY_SPAWN : UNITY_EXISTING];
-  const cliCheck = truthy(getOr(state, "cli_check", getOr(state, "mcp_check", true)));
-  if (cliCheck) unity.push(UNITY_INSTANCE_CHECK);
-  parts.push("## Unity\n\n" + unity.map((l) => "- " + l).join("\n"));
-  sections.push(cliCheck ? "unity +1" : "unity");
+  const unitySetting = need(state, "unity");
+  if (unitySetting !== OFF) {
+    const unity = [unitySetting === "spawn" ? UNITY_SPAWN : UNITY_EXISTING];
+    const cliCheck = truthy(getOr(state, "cli_check", getOr(state, "mcp_check", true)));
+    if (cliCheck) unity.push(UNITY_INSTANCE_CHECK);
+    parts.push("## Unity\n\n" + unity.map((l) => "- " + l).join("\n"));
+    sections.push(cliCheck ? "unity +1" : "unity");
+  }
 
   const on = activeToggles(need(state, "toggles"));
   if (on.length) {
@@ -194,7 +201,7 @@ export interface CliOptions {
   workflow: string;
   out?: string;
   base?: string;
-  branch?: "same" | "new";
+  branch?: "same" | "new" | "off";
   on: string[];
   off: string[];
   set: string[];

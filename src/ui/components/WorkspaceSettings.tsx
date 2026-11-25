@@ -24,6 +24,7 @@ export function WorkspaceSettings({ cfg, set, setWorkspace }: WorkspaceSettingsP
           name="branch"
           value={ws.branch}
           options={[
+            ["off", "Off", "Say nothing about branches"],
             ["same", "Same branch"],
             ["new", "Create new branch"],
           ]}
@@ -35,6 +36,7 @@ export function WorkspaceSettings({ cfg, set, setWorkspace }: WorkspaceSettingsP
             className="field"
             value={ws.base}
             placeholder="current"
+            disabled={ws.branch === "off"}
             spellCheck={false}
             autoComplete="off"
             onChange={(e) => setWorkspace("base", e.target.value, "base")}
@@ -47,6 +49,7 @@ export function WorkspaceSettings({ cfg, set, setWorkspace }: WorkspaceSettingsP
           name="worktree"
           value={ws.worktree}
           options={[
+            ["off", "Off", "Say nothing about worktrees"],
             ["per_task", "Worktree per task"],
             ["none", "No worktree"],
           ]}
@@ -71,14 +74,15 @@ export function WorkspaceSettings({ cfg, set, setWorkspace }: WorkspaceSettingsP
       <Group title="Unity instance">
         <Segmented
           name="unity"
-          value={cfg.unity === "spawn" ? "spawn" : "existing"}
+          value={cfg.unity === "off" ? "off" : cfg.unity === "spawn" ? "spawn" : "existing"}
           options={[
+            ["off", "Off", "Leave the Unity section out of the prompt"],
             ["spawn", "Spawn (Android)", "Spawn a Unity editor per task (Android builds)"],
             ["existing", "Use existing", "Use the Unity editor that is already running"],
           ]}
           onChange={(unity) => set({ unity })}
         />
-        <Check label="Verify Unity CLI targets this run's editor" checked={cfg.cli_check} onChange={(cli_check) => set({ cli_check })} />
+        <Check label="Verify Unity CLI targets this run's editor" checked={cfg.cli_check} disabled={cfg.unity === "off"} onChange={(cli_check) => set({ cli_check })} />
       </Group>
     </>
   );

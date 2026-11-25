@@ -12,7 +12,7 @@ describe("store reducer", () => {
     expect(s.cfg.toggles.tests).toBe(true);
     expect(s.cfg.branch).toBe("same");
     s = reducer(s, { type: "undo" });
-    expect(s.cfg.branch).toBe("new");
+    expect(s.cfg.branch).toBe("off");
     expect(s.cfg.toggles.tests).toBe(true);
     s = reducer(s, { type: "undo" });
     expect(s.cfg.toggles.tests).toBe(false);
@@ -68,7 +68,7 @@ describe("store reducer", () => {
     const s = reducer(initialState(start), { type: "reset" });
     expect(s.cfg.task).toBe("");
     expect(s.cfg.extra).toBe("");
-    expect(s.cfg.branch).toBe("new");
+    expect(s.cfg.branch).toBe("off");
     expect(s.cfg.toggles.tests).toBe(false);
     expect(s.cfg.workflow.name).toBe("keep_me");
     expect(s.cfg.tab).toBe("stages");

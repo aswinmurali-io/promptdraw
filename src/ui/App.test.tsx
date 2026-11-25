@@ -260,12 +260,20 @@ describe("properties panel", () => {
 
   it("edits workspace settings and the prompt follows", () => {
     render(<App />);
+    // Branch, worktree and Unity start off: the prompt says nothing about them.
+    expect(output()).not.toContain("branch");
+    expect(output()).not.toContain("worktree");
+    expect(output()).not.toContain("## Unity");
+    expect(screen.getByRole("textbox", { name: "Base branch" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Verify Unity CLI targets this run's editor" })).toBeDisabled();
     fireEvent.click(screen.getByRole("radio", { name: "Same branch" }));
     expect(output()).toContain("- Work on the current branch. Do NOT create a new branch.");
     fireEvent.change(screen.getByRole("textbox", { name: "Base branch" }), { target: { value: "main" } });
     expect(output()).toContain("Work on branch `main`");
     fireEvent.click(screen.getByRole("radio", { name: "No worktree" }));
     expect(screen.getByRole("checkbox", { name: "Copy .env files" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Use the Unity editor that is already running" }));
+    expect(output()).toContain("## Unity");
     fireEvent.click(screen.getByRole("checkbox", { name: "Verify Unity CLI targets this run's editor" }));
     expect(screen.getByText("unity", { selector: ".chip" })).toBeInTheDocument();
   });
@@ -500,7 +508,7 @@ describe("prompt preview", () => {
 describe("import", () => {
   it("imports a Python app config JSON through the file input", async () => {
     render(<App />);
-    const json = JSON.stringify({ branch: "same", base: "12.41.0", mcp_check: false, toggles: { unity_mcp: true, tests: true }, progress_minutes: "10", tab: "task" });
+    const json = JSON.stringify({ branch: "same", base: "12.41.0", unity: "existing", mcp_check: false, toggles: { unity_mcp: true, tests: true }, progress_minutes: "10", tab: "task" });
     const file = new File([json], ".prompt_builder.json", { type: "application/json" });
     await act(async () => {
       fireEvent.change(screen.getByTestId("file-input"), { target: { files: [file] } });

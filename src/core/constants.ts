@@ -10,8 +10,9 @@ export type ReconModel = "opus" | "sonnet";
 export type ProgressFormat = "output" | "json";
 export type StageModel = "fable" | "opus" | "sonnet" | "haiku";
 export type TemplateKey = "recon" | "architecture_audit" | "ui_critique" | "code_review";
-export type Branch = "same" | "new";
-export type Worktree = "per_task" | "none";
+/** `off` (promptdraw) leaves the line out of the prompt. */
+export type Branch = "same" | "new" | "off";
+export type Worktree = "per_task" | "none" | "off";
 export type Commit = "atomic" | "combined" | "none";
 export type Join = "all" | "first";
 export type FeSettingKey =
@@ -76,9 +77,9 @@ export const WORKER_MODEL_LINE = raw.WORKER_MODEL_LINE as Record<WorkerModel, st
 export const SETTINGS = raw.SETTINGS as FeSettingKey[];
 export const INLINE_OVERRIDES = raw.INLINE_OVERRIDES as ToggleKey[];
 
-export const BRANCH = raw.BRANCH as Record<Branch, string>;
-export const BRANCH_WITH_BASE = raw.BRANCH_WITH_BASE as Record<Branch, string>;
-export const WORKTREE = raw.WORKTREE as Record<Worktree, string>;
+export const BRANCH = raw.BRANCH as Record<Exclude<Branch, "off">, string>;
+export const BRANCH_WITH_BASE = raw.BRANCH_WITH_BASE as Record<Exclude<Branch, "off">, string>;
+export const WORKTREE = raw.WORKTREE as Record<Exclude<Worktree, "off">, string>;
 export const WORKTREE_COPY_ENV: string = raw.WORKTREE_COPY_ENV;
 export const COMMIT = raw.COMMIT as Record<Commit, string>;
 export const UNITY_SPAWN: string = raw.UNITY_SPAWN;
@@ -91,7 +92,14 @@ export const STAGE_MODELS = raw.STAGE_MODELS as StageModel[];
 export const ON_CANCEL_HEAD: string = raw.ON_CANCEL_HEAD;
 export const READ_ONLY_NOTE: string = raw.READ_ONLY_NOTE;
 export const JOINS = raw.JOINS as Join[];
-export const WORKSPACE = raw.WORKSPACE as { branch: Branch[]; worktree: Worktree[]; commit: Commit[]; base: null };
+/** promptdraw: the value that turns a workspace or Unity setting off, so the prompt says nothing about it. */
+export const OFF = "off";
+/** The Python app's workspace choices, plus promptdraw's `off` for branch and worktree. */
+export const WORKSPACE = {
+  ...(raw.WORKSPACE as { branch: Branch[]; worktree: Worktree[]; commit: Commit[]; base: null }),
+  branch: [...(raw.WORKSPACE.branch as Branch[]), OFF],
+  worktree: [...(raw.WORKSPACE.worktree as Worktree[]), OFF],
+} as { branch: Branch[]; worktree: Worktree[]; commit: Commit[]; base: null };
 export const ON_CANCEL_GRACE: number = raw.ON_CANCEL_GRACE;
 export const LOOP_DEFAULTS = raw.LOOP_DEFAULTS as {
   agentic: boolean; mode: "count" | "reward"; count: number; reward: string; metric: string; target: number; max_passes: number;

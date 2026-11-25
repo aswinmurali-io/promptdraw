@@ -148,6 +148,21 @@ describe("CompileTests", () => {
     expect(migrateState({ mcp_check: false, cli_check: true }).cli_check).toBe(true);
   });
 
+  it("off leaves branch, worktree and unity out", () => {
+    const { wf, cfg } = setup();
+    const [text, sections] = compileWorkflow(wf, { ...cfg, branch: "off", base: "main", worktree: "off", unity: "off" });
+    expect(text).not.toContain("on branch `main`");
+    expect(text).not.toContain("git worktree");
+    expect(text).not.toContain("## Unity");
+    expect(text).toContain("## Workspace & git\n\n- Make atomic commits");
+    expect(sections).not.toContain("unity +1");
+    expect(sections).toContain("git");
+    // A workflow may pin a setting off too.
+    const pinned = new Workflow({ ...wf.toDict(), workspace: { branch: "off" } });
+    expect(pinned.workspace.branch).toBe("off");
+    expect(compileWorkflow(pinned, { ...cfg, branch: "new" })[0]).not.toContain("Create a new branch");
+  });
+
   it("unity cli toggle and its old name", () => {
     const { wf, cfg } = setup();
     const [text] = compileWorkflow(wf, cfg);

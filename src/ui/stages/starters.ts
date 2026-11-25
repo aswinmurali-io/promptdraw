@@ -17,7 +17,7 @@ const SPRINT_CHASER: WorkflowDict = {
   goal:
     "Burn down this sprint: ship as many backlog tickets as the time box allows, highest value first, " +
     "each one meeting every acceptance criterion with passing tests and its own commit.",
-  workspace: { branch: "new", worktree: "per_task", commit: "atomic" },
+  workspace: { commit: "atomic" },
   on_cancel: {
     grace_minutes: 5,
     stages: [
@@ -167,7 +167,7 @@ const COUNCIL_OF_QC_UI: WorkflowDict = {
     "Bring one UI screen up to ship quality: a council of five specialist reviewers scores it in parallel, " +
     "the chair merges their verdicts into one fix list, the fixes land, and the council meets again until " +
     "the screen clears its bar.",
-  workspace: { branch: "new", worktree: "none", commit: "atomic" },
+  workspace: { commit: "atomic" },
   on_cancel: {
     grace_minutes: 3,
     stages: [
@@ -337,7 +337,7 @@ const HOLY_AUDIT: WorkflowDict = {
     "Audit this codebase against every engineering practice that matters, whatever the language: find the flaws " +
     "with evidence, rank them by risk, fix the ones that are safe to fix now, and leave an actionable roadmap and " +
     "guardrails for the rest.",
-  workspace: { branch: "new", worktree: "per_task", commit: "atomic" },
+  workspace: { commit: "atomic" },
   on_cancel: {
     grace_minutes: 5,
     stages: [

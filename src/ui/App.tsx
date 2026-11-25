@@ -5,6 +5,7 @@ import { buildActions, handleShortcut, type ActionContext } from "./actions";
 import { BottomControls } from "./components/BottomControls";
 import { CommandPalette } from "./components/CommandPalette";
 import { ConfirmDialog, Dialog } from "./components/Dialog";
+import { GitHubRibbon } from "./components/GitHubRibbon";
 import { Icon } from "./components/Icon";
 import { MainMenu } from "./components/MainMenu";
 import { OptionLanes } from "./components/OptionLanes";
@@ -622,6 +623,8 @@ export function App() {
           <WorkOpenButton onClick={() => patchPrefs({ workClosed: false })} />
         </div>
       )}
+
+      <GitHubRibbon />
 
       <div className="region region--bottom-right">
         <button type="button" className="tool-btn help-trigger island" aria-label="Help: keyboard shortcuts" aria-keyshortcuts="?" data-tooltip={"Keyboard shortcuts (?)\nEvery key and gesture in one list"} onClick={ctx.openShortcuts}>

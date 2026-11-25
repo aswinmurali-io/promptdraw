@@ -8,6 +8,8 @@
 
 **[▶ Try it live: aswinmurali-io.github.io/promptdraw](https://aswinmurali-io.github.io/promptdraw/)**
 
+[![Star promptdraw on GitHub](https://img.shields.io/github/stars/aswinmurali-io/promptdraw?style=social)](https://github.com/aswinmurali-io/promptdraw)
+
 <a href="public/intro.mp4"><img src="https://github.com/user-attachments/assets/3aef00ec-5a98-4f23-befd-957d29b84435" alt="30-second tour: a vague chat prompt becomes a Goal card, options are ticked, a workflow is drawn with parallel reviewers, an agentic loop and an A/B flag, then the prompt is copied" width="100%" /></a>
 
 <sub>▶ <a href="public/intro.mp4">Watch the 30-second intro (MP4)</a></sub>

@@ -1,4 +1,4 @@
-// A "Star on GitHub" corner ribbon. It sits in the top-right corner of the free canvas: left of
+// A "Star me on GitHub" corner ribbon, stitched like the classic "Fork me on GitHub" one. It sits in the top-right corner of the free canvas: left of
 // whatever holds the right edge's top (How to work, the Prompt panel, the stage inspector, the
 // starters, the How to work button, the tablet stage bar), and it steps aside entirely when the
 // top row has no room for it, so it never covers a close button or a tool.
@@ -27,7 +27,9 @@ export function GitHubRibbon() {
   return (
     <div ref={ref} className="gh-ribbon">
       <a className="gh-ribbon-band" href={REPO_URL} target="_blank" rel="noopener noreferrer" aria-label="Star promptdraw on GitHub (opens in a new tab)">
-        <span aria-hidden="true">★</span> Star on GitHub
+        <span className="gh-ribbon-stitch">
+          <span aria-hidden="true">★</span> Star me on GitHub
+        </span>
       </a>
     </div>
   );

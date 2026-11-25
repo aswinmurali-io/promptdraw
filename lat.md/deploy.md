@@ -33,6 +33,12 @@ All user data stays in each visitor's browser, so hosting needs no server-side s
 
 Settings, the task, view prefs, the theme and the saved workflow library live in `localStorage` under `promptdraw:*` keys (see [[ui#Persistence and files]] and [[stages#Workflow library]]). Data is per origin: moving the app to a new domain starts visitors with empty storage, and they carry settings across by exporting the JSON and opening it on the new site.
 
+## License
+
+promptdraw is AGPL-3.0-only: the full text is in `LICENSE` and `package.json` declares it, so forks that are shipped or hosted must publish their source.
+
+AGPL rather than GPL because it also covers modified versions served over a network, not only ones distributed as files. Bundled third-party fonts and libraries keep their own licences, listed in `THIRD_PARTY_NOTICES.md`.
+
 ## Windows desktop build
 
 `npm run package:win` wraps the static build in Electron and emits a single portable Windows exe, `release/promptdraw-<version>-portable.exe`.

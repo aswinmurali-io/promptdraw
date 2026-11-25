@@ -190,3 +190,9 @@ Working on promptdraw itself? `CLAUDE.md` and `lat.md/` hold the conventions and
 
 Design inspired by open-source whiteboard tools. promptdraw is an original app; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the fonts and libraries it ships.
+
+## 📄 License
+
+promptdraw is licensed under the [GNU Affero General Public License v3.0](LICENSE)
+(`AGPL-3.0-only`). You may use, modify and share it, but any version you distribute, or let
+people use over a network, must make its full source available under the same licence.

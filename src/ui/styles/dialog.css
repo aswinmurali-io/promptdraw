@@ -1,0 +1,146 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: start center;
+  padding: 12vh 1rem 1rem;
+  background: var(--backdrop);
+  /* A soft blur on top of the dim pushes the board, panels and toolbar back, so the dialog
+     is the one sharp thing on screen. */
+  -webkit-backdrop-filter: blur(3px) saturate(0.85);
+  backdrop-filter: blur(3px) saturate(0.85);
+}
+
+.dialog,
+.dialog.island {
+  width: 100%;
+  max-width: 50rem;
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 4);
+  /* A dialog is a page of content, not a tool strip: it keeps its own roomy padding over the
+     island's 4px (islands are loaded later, so this needs the extra class to win). */
+  padding: calc(var(--space) * 5) calc(var(--space) * 6) calc(var(--space) * 6);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: var(--weight-title);
+}
+
+.dialog-message {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--space) * 2);
+}
+
+.dialog-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  overflow: auto;
+  color: var(--text-muted);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* shortcuts dialog */
+
+/* Three balanced columns that scroll as one (wrapping when narrow). Scroll shadows: the island's
+   own colour covers a soft shade at either end until there is more to scroll that way. */
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+  column-gap: 1.75rem;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background:
+    linear-gradient(var(--island-bg) 50%, transparent) center top / 100% 2.5rem no-repeat local,
+    linear-gradient(transparent, var(--island-bg) 50%) center bottom / 100% 2.5rem no-repeat local,
+    linear-gradient(color-mix(in srgb, var(--text-primary) 14%, transparent), transparent) center top / 100% 0.9rem no-repeat scroll,
+    linear-gradient(transparent, color-mix(in srgb, var(--text-primary) 14%, transparent)) center bottom / 100% 0.9rem no-repeat scroll;
+}
+
+.shortcut-group {
+  margin: 0 0 0.8rem;
+}
+
+.shortcut-group:last-child {
+  margin-bottom: 0;
+}
+
+/* A reference sheet: it may use the height down to the backdrop's bottom padding. */
+.dialog.dialog--tall {
+  max-height: calc(88vh - 1rem);
+}
+
+/* Group headings speak the inspector's voice: small, all-caps, muted. */
+.shortcut-group h3 {
+  margin: 0 0 0.3rem;
+  font-size: var(--text-small);
+  font-weight: var(--weight-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.22rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcut-keys {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.shortcut-or {
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.kbd-combo {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* First-visit intro: a 16:9 video filling the dialog's width, never taller than the screen allows. */
+.intro-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(76vh - 9rem);
+  border-radius: var(--radius-lg);
+  background: var(--surface-mid);
+  object-fit: contain;
+}

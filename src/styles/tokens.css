@@ -1,0 +1,203 @@
+/*
+ * promptdraw design tokens. See lat.md/design.md for the rationale.
+ *
+ * Theme resolution:
+ *   [data-theme="light"] on <html>  -> light
+ *   [data-theme="dark"]  on <html>  -> dark
+ *   no data-theme                   -> follows prefers-color-scheme
+ *
+ * Canvas content is always stored in light-mode colours; dark mode inverts
+ * the canvas layer with --canvas-filter so saved documents never depend on
+ * the theme. UI chrome is themed with the tokens below.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Accent: one soft violet, hue nudged off the reference for our own identity. */
+  --color-primary: #6c63ff;
+  --color-primary-darker: #5d54f0; /* hover */
+  --color-primary-darkest: #4b43cf; /* active / pressed */
+  --color-primary-light: #e6e4ff; /* selected tool background */
+  --color-on-primary: #ffffff;
+  /* Filled accent (white text on it: Copy, the current mode, step numbers) and small accent
+     text. #6c63ff is only 4.3:1 against white, so fills and 13px text take a deeper step of
+     the same hue (5.6:1); the lighter violet stays for outlines, rings, tints and icons. */
+  --color-primary-fill: #5a50e8;
+  --color-primary-fill-hover: #4b43cf;
+  --color-primary-fill-active: #4038b8;
+
+  /* Surfaces */
+  --canvas-bg: #ffffff;
+  --island-bg: #ffffff;
+  --surface-low: #f5f5f9; /* button bg, inputs */
+  --surface-mid: #f1f1f6;
+  --surface-high: #eaeaf2; /* button hover */
+  --surface-primary-container: #e2e0ff; /* selected state */
+  --backdrop: rgba(18, 18, 18, 0.4);
+
+  /* Text & lines */
+  --text-primary: #1b1b1f;
+  --text-muted: #5c5c66;
+  /* Decorative digits, placeholders and disabled text only (about 3.4:1 on white).
+     Text people need to read uses --text-muted. */
+  --text-faint: #8a8a94;
+  /* A select's chevron, in the muted ink (an image can't read currentColor). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c5c66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  --border: #e7e7ee; /* hairlines, dividers */
+  --focus-ring: var(--color-primary);
+
+  /* Canvas interaction */
+  --selection-stroke: var(--color-primary);
+  --selection-fill: rgba(108, 99, 255, 0.08);
+  --grid-dot: rgba(0, 0, 0, 0.12);
+  --danger: #e03131;
+  /* Something to finish (an empty task): amber, readable at 13px on its own tint. */
+  --warn-bg: #fff4db;
+  --warn-text: #8a5300;
+  /* The orange How to work button (closed panel): dark ink on orange passes AA. */
+  --work-open-bg: #f08c00;
+  --work-open-ink: #1e1e1e;
+  --canvas-filter: none;
+
+  /* Elevation */
+  --shadow-island:
+    0 0 0.93px 0 rgba(0, 0, 0, 0.17),
+    0 0 3.13px 0 rgba(0, 0, 0, 0.08),
+    0 7px 14px 0 rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.18);
+  --island-border: none;
+
+  /* Shape */
+  --space: 0.25rem; /* 4px base unit */
+  --island-padding: var(--space);
+  --island-inset: 0.75rem; /* 12px from viewport edges */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --button-lg: 2.25rem; /* 36px toolbar buttons */
+  --button-md: 2rem; /* 32px panel buttons */
+  --icon-size: 1.125rem;
+  --icon-stroke: 1.75;
+  --swatch-size: 1.75rem;
+  --divider-height: 1.5rem;
+  --props-width: 12.5rem; /* ~200px properties island */
+  --sidebar-width: 18.75rem; /* ~300px library / inspector sidebar */
+  --grid-size: 20px;
+  --mobile-breakpoint: 730px; /* reference only; media queries hard-code it */
+
+  /* Type: two voices */
+  --font-hand: "Kalam", "Comic Sans MS", "Segoe Print", cursive;
+  --font-hint: "Caveat", var(--font-hand);
+  --font-ui: "Assistant", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Cascadia Code", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-base: 0.9375rem; /* 15px UI */
+  --text-label: 0.8125rem; /* 13px group labels */
+  --text-small: 0.75rem; /* 12px chips and meta; nothing smaller except shortcut digits */
+  --text-shortcut: 0.75rem; /* 12px digit on tool buttons: the type floor */
+  --weight-body: 500;
+  --weight-label: 600;
+  --weight-heading: 600;
+  --weight-title: 700;
+  --weight-hand: 700;
+
+  /* Layers, lowest first: canvas overlays, the floating islands, phone bottom sheets (and the
+     tab bar riding on them), popovers (menus), the toast, modal dialogs, tooltips. An open
+     menu lifts its whole island region to --z-popover so it always drops over a sheet. */
+  --z-canvas-overlay: 5;
+  --z-island: 10;
+  --z-island-raised: 12;
+  --z-sheet: 30;
+  --z-sheet-bar: 31;
+  --z-popover: 40;
+  --z-toast: 45;
+  --z-modal: 50;
+  --z-tooltip: 70;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  /* The motion spec: hover and press, popovers and rows, panels and dialogs. */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 280ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Dark values. Duplicated on purpose: once for the explicit attribute and
+   once for the system preference when no explicit light choice is set. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-primary: #aca6ff;
+  --color-primary-darker: #b7b2ff;
+  --color-primary-darkest: #c3beff;
+  --color-primary-light: #4e4b72;
+  --color-on-primary: #121212;
+  --color-primary-fill: #aca6ff;
+  --color-primary-fill-hover: #b7b2ff;
+  --color-primary-fill-active: #c3beff;
+  --canvas-bg: #121212;
+  --island-bg: #232329;
+  --surface-low: #2e2d39;
+  --surface-mid: #26262d;
+  --surface-high: #363541;
+  --surface-primary-container: #413e6e;
+  --backdrop: rgba(0, 0, 0, 0.62);
+  --text-primary: #e3e3e8;
+  --text-muted: #a3a3ad;
+  --text-faint: #75757f;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3a3ad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  --border: #2e2d39;
+  --selection-fill: rgba(172, 166, 255, 0.12);
+  --grid-dot: rgba(255, 255, 255, 0.12);
+  --danger: #ff8787;
+  --warn-bg: #3b3020;
+  --warn-text: #ffc977;
+  --canvas-filter: invert(93%) hue-rotate(180deg);
+  --shadow-island:
+    0 0 0.93px 0 rgba(0, 0, 0, 0.4),
+    0 0 3.13px 0 rgba(0, 0, 0, 0.3),
+    0 7px 14px 0 rgba(0, 0, 0, 0.25);
+  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --island-border: 1px solid var(--border);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-primary: #aca6ff;
+    --color-primary-darker: #b7b2ff;
+    --color-primary-darkest: #c3beff;
+    --color-primary-light: #4e4b72;
+    --color-on-primary: #121212;
+    --color-primary-fill: #aca6ff;
+    --color-primary-fill-hover: #b7b2ff;
+    --color-primary-fill-active: #c3beff;
+    --canvas-bg: #121212;
+    --island-bg: #232329;
+    --surface-low: #2e2d39;
+    --surface-mid: #26262d;
+    --surface-high: #363541;
+    --surface-primary-container: #413e6e;
+    --backdrop: rgba(0, 0, 0, 0.62);
+    --text-primary: #e3e3e8;
+    --text-muted: #a3a3ad;
+    --text-faint: #75757f;
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3a3ad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+    --border: #2e2d39;
+    --selection-fill: rgba(172, 166, 255, 0.12);
+    --grid-dot: rgba(255, 255, 255, 0.12);
+    --danger: #ff8787;
+    --warn-bg: #3b3020;
+    --warn-text: #ffc977;
+    --canvas-filter: invert(93%) hue-rotate(180deg);
+    --shadow-island:
+      0 0 0.93px 0 rgba(0, 0, 0, 0.4),
+      0 0 3.13px 0 rgba(0, 0, 0, 0.3),
+      0 7px 14px 0 rgba(0, 0, 0, 0.25);
+    --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --island-border: 1px solid var(--border);
+  }
+}

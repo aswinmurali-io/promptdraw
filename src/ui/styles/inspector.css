@@ -1,0 +1,1184 @@
+/* Stage inspector island: a properties island with a sticky title row and a body that scrolls on
+   its own. One rhythm throughout: 18px side padding, 8px label → field, 16px between fields,
+   sections ruled apart under small all-caps headings. Docked right, resizable from its left edge. */
+
+.inspector {
+  --insp-pad: 1.125rem; /* 18px side padding */
+  --insp-field-h: 2.375rem; /* 38px single-line fields */
+  /* 16px field text: easy to read and write in on a tablet, and iPad Safari only zooms the
+     page into a focused field set below 16px. */
+  --insp-text: 1rem;
+  /* The chrome around the fields steps up with them, so labels, hints, choices and headings
+     read at one scale with the 16px text instead of the shell's 12-15px toolbar sizes. */
+  --text-base: 1rem; /* 16px checkboxes, choices, buttons */
+  --text-label: 0.9375rem; /* 15px labels, subtitle */
+  --text-small: 0.875rem; /* 14px hints, eyebrows, meta */
+  width: var(--inspector-w, 300px);
+  max-width: calc(100vw - var(--island-inset) * 2);
+}
+
+/* The island no longer scrolls as a whole: the header stays put and the body scrolls. */
+.props-panel.inspector.island {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  background: var(--island-bg);
+  font-size: var(--text-base);
+  /* A tall white panel on a white canvas (and a dark one whose hairline matches its fields)
+     needs a drawn edge: a soft line tinted from the text colour, readable in both themes. */
+  border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+}
+
+/* Wide screens: a fixed panel docked on the right, from under the toolbar row to just above
+   Help, whatever the form's height, in the Prompt panel's place. It opens with a wipe from the
+   right while its content slides in; the island's own box never moves, so the canvas measures
+   the room it takes on the first frame and glides the stages left in step. */
+@media (min-width: 731px) {
+  .app .props-panel.inspector.island {
+    top: calc(var(--island-inset) * 2 + var(--top-h));
+    right: var(--island-inset);
+    bottom: calc(var(--island-inset) * 2 + var(--button-lg));
+    left: auto;
+    max-height: none;
+    animation: insp-in 240ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  }
+
+  .props-panel.inspector.island > .insp-header,
+  .props-panel.inspector.island > .insp-body {
+    animation: insp-slide 240ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  }
+
+  /* The copy left behind on close folds back out to the right, then is removed. */
+  .app .props-panel.inspector.island.inspector--leaving {
+    pointer-events: none;
+    animation: insp-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  .props-panel.inspector.inspector--leaving > .insp-header,
+  .props-panel.inspector.inspector--leaving > .insp-body {
+    animation: insp-slide-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+}
+
+@keyframes insp-in {
+  from {
+    clip-path: inset(0 0 0 100% round var(--radius-lg));
+    opacity: 0.6;
+  }
+  to {
+    clip-path: inset(0 0 0 0 round var(--radius-lg));
+    opacity: 1;
+  }
+}
+
+@keyframes insp-out {
+  from {
+    clip-path: inset(0 0 0 0 round var(--radius-lg));
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(0 0 0 100% round var(--radius-lg));
+    opacity: 0;
+  }
+}
+
+@keyframes insp-slide {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+
+@keyframes insp-slide-out {
+  to {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .props-panel.inspector.island,
+  .props-panel.inspector.island > .insp-header,
+  .props-panel.inspector.island > .insp-body {
+    animation: none;
+  }
+}
+
+/* ---- header ---------------------------------------------------------- */
+
+.insp-header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  padding: 0.875rem calc(var(--insp-pad) - 0.375rem) 0.75rem var(--insp-pad);
+  border-bottom: 1px solid var(--border);
+}
+
+.insp-titles {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.props-title.insp-title {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  /* A long stage name stays on two lines in the header; the full name is in the field. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* An unnamed stage: the same words as its card, in the muted ink, so it reads as "no name yet". */
+.props-title.insp-title[data-untitled] {
+  color: var(--text-muted);
+}
+
+/* "STAGE 6" over the name, like the card's eyebrow. */
+.insp-eyebrow {
+  margin: 0 0 1px;
+  font-size: var(--text-small);
+  font-weight: var(--weight-title);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--color-primary-darkest);
+}
+
+.insp-subtitle {
+  margin: 0;
+  font-size: var(--text-label);
+  font-weight: var(--weight-body);
+  line-height: 1.35;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.insp-close {
+  flex: none;
+  margin-top: -2px;
+}
+
+/* ---- body ------------------------------------------------------------ */
+
+/* Scroll cue: a soft shade on the foot while there is more below; scrolled to the end, a cover
+   that travels with the content (attachment: local) hides it. */
+.insp-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--insp-pad) 1.25rem;
+  font-size: var(--text-label);
+  background:
+    linear-gradient(var(--island-bg), var(--island-bg)) center bottom / 100% 24px no-repeat local,
+    linear-gradient(transparent, color-mix(in srgb, var(--text-primary) 12%, transparent)) center bottom / 100% 16px no-repeat scroll,
+    var(--island-bg);
+}
+
+/* While there is more below, the last visible lines dissolve into the island's foot (a sticky
+   veil over the bottom padding once scrolled to the end), so a long panel reads as "scroll for
+   more" rather than as cut off. */
+.insp-body::after {
+  content: "";
+  position: sticky;
+  bottom: -1.25rem;
+  flex: none;
+  height: 2.5rem;
+  margin: -1.25rem calc(var(--insp-pad) * -1) -1.25rem;
+  background: linear-gradient(color-mix(in srgb, var(--island-bg) 0%, transparent), var(--island-bg) 85%);
+  pointer-events: none;
+}
+
+.insp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.125rem 0;
+}
+
+.insp-section:last-child {
+  padding-bottom: 0;
+}
+
+.insp-section + .insp-section {
+  border-top: 1px solid var(--border);
+}
+
+.insp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  margin-bottom: -0.25rem;
+}
+
+.insp-section-title {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: var(--weight-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.insp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.insp-field--inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: calc(var(--space) * 3);
+  row-gap: 0.375rem;
+}
+
+.insp-field--inline .insp-hint {
+  grid-column: 1 / -1;
+}
+
+.insp-label {
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  line-height: 1.3;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+/* The {{#if}} branches of a block, read only: one row per branch, the chosen one marked. */
+.insp-branches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.insp-branch {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px dashed var(--ab-ink, #d9480f);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.insp-branch[data-chosen] {
+  border-style: solid;
+  background: color-mix(in srgb, var(--ab-ink, #d9480f) 9%, transparent);
+  color: var(--text);
+}
+
+.insp-branch-letter {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.375rem;
+  display: grid;
+  place-items: center;
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--ab-ink, #d9480f);
+  border: 1px solid currentColor;
+}
+
+.insp-branch[data-chosen] .insp-branch-letter {
+  background: var(--ab-ink, #d9480f);
+  color: var(--surface, #fff);
+}
+
+.insp-branch-body {
+  min-width: 0;
+  font-size: var(--text-small);
+}
+
+.insp-branch-body p {
+  margin: 0.125rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.insp-branch-state {
+  margin-left: 0.375rem;
+  font-weight: var(--weight-body);
+  opacity: 0.8;
+}
+
+.insp-hint,
+.insp-intro {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: var(--weight-body);
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Under a checkbox, the hint lines up with the label's words. */
+.insp-hint--check {
+  margin-top: -0.25rem;
+  padding-left: calc(13px + var(--space) * 1.5);
+}
+
+.insp-hint code,
+.insp-more code {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  overflow-wrap: anywhere;
+}
+
+/* ---- fields ----------------------------------------------------------- */
+
+.inspector .field {
+  height: var(--insp-field-h);
+  padding: 0 0.75rem;
+  font-family: var(--font-ui);
+  font-size: var(--insp-text);
+}
+
+/* Selects match the text fields: no native bevel, the app's own light chevron. */
+.inspector select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.25rem;
+  cursor: pointer;
+  background-image: var(--select-chevron);
+  background-position: right 0.625rem center;
+  background-size: 1rem 1rem;
+  background-repeat: no-repeat;
+}
+
+.inspector select.field:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text-muted) 45%, var(--border));
+}
+
+.inspector .field.field--num {
+  width: 4.5rem;
+  padding: 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--insp-text);
+}
+
+/* Small inline selects in the intentions list keep their compact size. */
+.inspector .intent-form .field {
+  height: var(--button-md);
+  padding: 0 0.5rem;
+  font-size: var(--text-label);
+}
+
+.inspector .intent-form .field.field--num {
+  width: 3.25rem;
+}
+
+/* Text areas: the UI face at 16px / 1.55, full width, growing with the text up to a cap, then
+   scrolling. Rich areas set the same metrics on the box so mirror and textarea match. */
+.field.insp-text,
+.field.insp-text.field--mono {
+  font-family: var(--font-ui);
+  font-size: var(--insp-text);
+  height: auto;
+  min-height: 6rem;
+  max-height: min(26rem, 55vh);
+  padding: 0.625rem 0.75rem;
+  resize: vertical;
+  line-height: 1.55;
+  field-sizing: content;
+}
+
+/* Rich (prompt) areas grow with their text and never scroll on their own: the inspector body is
+   the one scroller, so a long prompt never shows a scrollbar inside a scrollbar. */
+.insp-rich,
+.insp-rich.field--mono {
+  --hl-pad: 0.625rem 0.75rem;
+  min-height: 6rem;
+  font-family: var(--font-ui);
+  font-size: var(--insp-text);
+  font-weight: var(--weight-body);
+  line-height: 1.55;
+}
+
+.insp-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  color: var(--text-muted);
+  font-weight: var(--weight-label);
+}
+
+.insp-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 1rem;
+}
+
+.insp-pair .field.field--num {
+  width: 100%;
+}
+
+/* ---- buttons ---------------------------------------------------------- */
+
+.insp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--space) * 2);
+}
+
+.btn.btn--sm {
+  height: var(--button-md);
+  padding: 0 0.75rem;
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+}
+
+.btn.btn--ghost {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.btn.btn--danger-ghost {
+  background: transparent;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.btn.btn--danger-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* The destructive action sits last, under its own rule, away from the reorder buttons. */
+.insp-danger {
+  display: flex;
+  margin-top: 0.25rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--border);
+}
+
+.insp-danger .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* A link-styled button: names that open another block. */
+.insp-link {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary-darkest);
+  font: inherit;
+  font-weight: var(--weight-label);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.insp-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.insp-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.segmented--column {
+  flex-direction: column;
+}
+
+.segmented--column .seg-option {
+  text-align: left;
+}
+
+.inspector .seg-option {
+  padding: 0.4375rem 0.625rem;
+}
+
+/* ---- disclosure ------------------------------------------------------- */
+
+.insp-more {
+  font-size: var(--text-small);
+  color: var(--text-muted);
+}
+
+.insp-more summary {
+  width: fit-content;
+  font-weight: var(--weight-label);
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.insp-more summary:hover {
+  color: var(--text-primary);
+}
+
+.insp-more-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  line-height: 1.45;
+}
+
+.insp-more-body p {
+  margin: 0;
+}
+
+.insp-more .insp-code {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  background: var(--island-bg);
+}
+
+/* ---- template, problems ---------------------------------------------- */
+
+.insp-template {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  font-size: var(--text-small);
+  color: var(--text-muted);
+}
+
+.insp-template strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-label);
+}
+
+.insp-problems {
+  margin: 0 0 0.5rem;
+  padding: 0.625rem 0.75rem;
+  list-style: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--danger);
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+
+/* ---- function "Used by" list ------------------------------------------ */
+
+.insp-users {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.insp-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  min-width: 0;
+}
+
+.insp-user + .insp-user {
+  border-top: 1px solid var(--border);
+}
+
+.insp-user-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  min-width: 0;
+}
+
+.insp-user-kind {
+  flex: none;
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.insp-user-args {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.insp-arg {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2);
+  min-width: 0;
+}
+
+.insp-arg dt {
+  flex: none;
+  max-width: 40%;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insp-arg dd {
+  margin: 0;
+  min-width: 0;
+  font-size: var(--text-small);
+  font-weight: var(--weight-body);
+  line-height: 1.45;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.insp-user-args[data-open] .insp-arg dd {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: none;
+}
+
+.insp-toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  color: var(--color-primary-darkest);
+  cursor: pointer;
+}
+
+.insp-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---- parallel branches ------------------------------------------------ */
+
+.insp-branches {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.insp-branches li {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2);
+  min-width: 0;
+}
+
+.insp-branch-num {
+  flex: none;
+  min-width: 2rem;
+  font-size: var(--text-small);
+  font-weight: var(--weight-title);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- uses panel: one function card per [[call]]; function magenta like the canvas shelf --- */
+
+.insp-use {
+  --fn: #c026d3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--fn) 40%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--fn) 5%, var(--island-bg));
+}
+
+:root[data-theme="dark"] .insp-use {
+  --fn: #e879f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .insp-use {
+    --fn: #e879f9;
+  }
+}
+
+.insp-use[data-unknown] {
+  border-color: var(--border);
+  background: var(--surface-low);
+}
+
+.insp-use-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  min-width: 0;
+}
+
+.insp-use-name {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: calc(var(--space) * 2);
+  color: var(--fn);
+  font-size: var(--insp-text);
+  font-weight: var(--weight-title);
+  overflow-wrap: anywhere;
+}
+
+.insp-use[data-unknown] .insp-use-name {
+  color: var(--text-muted);
+}
+
+.insp-use-tag {
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  color: var(--text-muted);
+}
+
+.insp-param-row {
+  display: grid;
+  grid-template-columns: minmax(3.5rem, max-content) minmax(0, 1fr);
+  align-items: center;
+  gap: calc(var(--space) * 2);
+}
+
+.insp-param {
+  max-width: 7rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.insp-use .field {
+  background: var(--island-bg);
+}
+
+.insp-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.insp-preview-label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  color: var(--text-muted);
+}
+
+.insp-preview {
+  margin: 0;
+  max-height: 10rem;
+  overflow: auto;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  background: var(--island-bg);
+  font-size: var(--text-small);
+  font-weight: var(--weight-body);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.insp-preview strong {
+  color: var(--fn);
+}
+
+/* ---- intentions ------------------------------------------------------- */
+
+.intent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intent-form .row--inline {
+  flex-wrap: wrap;
+  row-gap: var(--space);
+}
+
+.intent-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0.375rem 0 0 1.4rem;
+}
+
+/* ---- resize handle ---------------------------------------------------- */
+
+.insp-resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  touch-action: none;
+}
+
+.insp-resize:hover,
+.insp-resize:focus-visible {
+  background: var(--color-primary);
+  outline: none;
+}
+
+/* Phones: a full-width bottom sheet like the other panels. The sheet's foot sits under the
+   docked stage and tab bars, so the body ends above them and scrolls inside. */
+@media (max-width: 730px) {
+  .props-panel.inspector.island {
+    width: auto !important;
+    /* Just the docked bars' room: the sheet is as tall as its form, with no empty band
+       between the last field and the stage tools. */
+    padding: 0 0 calc(var(--island-inset) + var(--bar-h));
+    background: var(--island-bg);
+  }
+
+  .inspector {
+    --insp-pad: 1rem;
+  }
+
+  .insp-resize {
+    display: none;
+  }
+}
+
+/* ---- prompt fields ---------------------------------------------------- */
+
+/* Label, Write / Preview switch and the expand button on one row (wrapping when narrow). */
+.pf-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.pf-head .insp-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-view .output-view-opt {
+  padding: 1px calc(var(--space) * 1.75);
+}
+
+.pf-expand {
+  color: var(--text-muted);
+}
+
+.pf-expand:hover {
+  color: var(--text-primary);
+}
+
+/* Dictation: the mic turns red and pulses while it listens. */
+.pf-mic {
+  color: var(--text-muted);
+}
+
+.pf-mic:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.pf-mic:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pf-mic.is-live {
+  color: #fff;
+  background: var(--danger);
+  animation: pf-mic-pulse 1.4s ease-out infinite;
+}
+
+.pf-mic.is-live:hover {
+  color: #fff;
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+@keyframes pf-mic-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 0.5rem transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-mic.is-live {
+    animation: none;
+  }
+}
+
+/* What is being heard, under the field, until it lands in the text. */
+.pf-dictation {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.pf-dictation-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--danger);
+  transform: translateY(-0.05rem);
+}
+
+.pf-dictation-live {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.pf-dictation--error {
+  color: var(--danger);
+}
+
+.pf-preview {
+  min-height: 6rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  font-size: var(--insp-text);
+  cursor: text;
+}
+
+.pf-preview:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+/* ---- large prompt editor ------------------------------------------------ */
+
+.backdrop:has(> .prompt-editor) {
+  padding-top: 5vh;
+}
+
+.dialog.island.prompt-editor {
+  max-width: 76rem;
+  height: 88vh;
+  max-height: 88vh;
+  gap: calc(var(--space) * 3);
+}
+
+.pe-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) * 2) calc(var(--space) * 4);
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.pe-hint {
+  flex: 1;
+  min-width: 0;
+}
+
+.pe-hint code {
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  font-family: var(--font-mono);
+}
+
+.pe-count {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.pe-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--space) * 3);
+}
+
+.pe-body[data-view="split"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* Each pane is a page: one scroller, the text held to a comfortable measure in the middle. */
+.pe-pane {
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  scrollbar-width: thin;
+}
+
+.pe-pane:focus-within,
+.pe-read:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.pe-write .insp-rich.pe-area {
+  --hl-pad: 1rem 1.25rem 2rem;
+  max-width: 78ch;
+  min-height: 100%;
+  margin-inline: auto;
+  border: 0;
+  background: transparent;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.pe-write .insp-rich.pe-area:focus-within {
+  outline: none;
+}
+
+.pe-read .md-preview {
+  max-width: 78ch;
+  margin-inline: auto;
+  padding: 1rem 1.25rem 2rem;
+  font-size: 1.0625rem;
+}
+
+/* Phones: the editor is the whole screen, one pane at a time. */
+@media (max-width: 730px) {
+  .backdrop:has(> .prompt-editor) {
+    padding: 0;
+  }
+
+  .dialog.island.prompt-editor {
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: calc(var(--space) * 3) calc(var(--space) * 4) calc(var(--space) * 4);
+    border-radius: 0;
+  }
+
+  .prompt-editor .pf-view-split,
+  .prompt-editor .pe-hint {
+    display: none;
+  }
+
+  .pe-body[data-view="split"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pe-body[data-view="split"] .pe-read {
+    display: none;
+  }
+
+  .pe-write .insp-rich.pe-area {
+    --hl-pad: 0.75rem 0.875rem 1.5rem;
+  }
+
+  .pe-read .md-preview {
+    padding: 0.75rem 0.875rem 1.5rem;
+  }
+}
+
+/* Name row: the name takes the room, then Model and Read-only on its right, every control the
+   field height so the row reads as one line. A narrow panel wraps them under the name. */
+.insp-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem calc(var(--space) * 2);
+}
+
+.insp-name-row > .insp-field:first-child {
+  flex: 1 1 9rem;
+}
+
+.insp-name-row > .insp-field:nth-child(2) {
+  flex: 0 0 7.5rem;
+}
+
+/* Read-only as a box the height of a field, so it lines up with them; ticked, it takes the
+   accent tint like a pressed toggle. */
+.inspector .check.insp-ro {
+  flex: 0 0 auto;
+  align-items: center;
+  height: var(--insp-field-h);
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  font-size: var(--insp-text);
+  white-space: nowrap;
+}
+
+.inspector .check.insp-ro input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
+.inspector .check.insp-ro:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+.inspector .check.insp-ro:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Checkboxes and segmented choices read at the fields' 16px, not the shell's label size. */
+.inspector .check,
+.inspector .seg-option {
+  font-size: var(--text-base);
+}
+
+.inspector .check input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+}

@@ -1,0 +1,16 @@
+/*
+ * Self-hosted fonts via @fontsource (SIL Open Font License 1.1; license
+ * files ship inside each package and in THIRD_PARTY_NOTICES.md). Bundled
+ * by Vite, so the app makes no third-party font requests.
+ *
+ * Weights are kept sturdy so text reads at a glance:
+ * - Kalam 700 : hand-drawn voice for canvas content (400 only for long typed text)
+ * - Caveat 700: handwritten hint labels
+ * - Assistant : UI chrome, 500 body, 600 labels, 700 headings
+ */
+@import "@fontsource/kalam/latin-400.css";
+@import "@fontsource/kalam/latin-700.css";
+@import "@fontsource/caveat/latin-700.css";
+@import "@fontsource/assistant/latin-500.css";
+@import "@fontsource/assistant/latin-600.css";
+@import "@fontsource/assistant/latin-700.css";

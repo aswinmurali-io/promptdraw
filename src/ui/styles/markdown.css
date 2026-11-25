@@ -1,0 +1,100 @@
+/* MarkdownPreview: a stage prompt read as rendered Markdown. The UI face at body size; code in
+   the mono face on a faint accent tint; fenced blocks as their own tinted panel that scrolls
+   sideways rather than wrapping. */
+.md-preview {
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-body);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.md-preview .md-p {
+  margin: 0;
+}
+
+.md-preview .md-gap-line {
+  height: 0.6em;
+}
+
+.md-preview .md-empty {
+  margin: 0;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.md-preview .md-heading {
+  margin: 0.9em 0 0.2em;
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.md-preview .md-heading:first-child {
+  margin-top: 0;
+}
+
+.md-preview .md-heading--1 {
+  font-size: 1.2em;
+}
+
+.md-preview .md-heading--2 {
+  font-size: 1.08em;
+}
+
+.md-preview .md-heading--3 {
+  font-size: 1em;
+}
+
+.md-preview .md-item {
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  margin-block: 0.15em;
+}
+
+.md-preview .md-marker {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.md-preview strong {
+  font-weight: 700;
+}
+
+.md-preview .md-code {
+  padding: 0.05em 0.3em;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-darkest);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.md-preview .md-pre {
+  position: relative;
+  margin: 0.5em 0;
+  padding: 0.65em 0.85em;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--surface-low));
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-wrap: normal;
+  scrollbar-width: thin;
+}
+
+/* The fence's language, if any, as a small tag in the corner. */
+.md-preview .md-pre[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.3em;
+  right: 0.5em;
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  font-size: var(--text-small);
+}

@@ -1,0 +1,327 @@
+.output-panel {
+  position: absolute;
+  z-index: var(--z-island);
+  top: calc(var(--island-inset) * 2 + var(--top-h));
+  right: var(--island-inset);
+  bottom: calc(var(--island-inset) * 2 + var(--button-lg));
+  width: var(--output-w);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 3);
+  /* One inset on every side; the note, the text and the counts line up on it. */
+  padding: calc(var(--space) * 4);
+}
+
+/* `.island` sets its own (smaller) padding; the panel's one inset wins over it. */
+.output-panel.island {
+  padding: calc(var(--space) * 4);
+}
+
+/* Hidden while the stage inspector holds the right edge; it keeps its state for when it returns. */
+.output-panel[hidden] {
+  display: none;
+}
+
+.output-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+}
+
+/* The × glyph, not its hit area, lines up with the panel's inset (as the title's first letter does). */
+.output-head > .icon-btn:last-child {
+  margin-right: calc((var(--button-md) - 16px) / -2);
+}
+
+.output-title {
+  margin: 0;
+  margin-right: auto;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  padding: 1px calc(var(--space) * 2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+}
+
+/* An empty task or goal: one amber line under the chips, with a way to go and fill it in. */
+.output-gap {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.5);
+  margin: 0;
+  padding: calc(var(--space) * 1.5) calc(var(--space) * 1.5) calc(var(--space) * 1.5) calc(var(--space) * 3);
+  border-radius: var(--radius-md);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  line-height: 1.3;
+}
+
+/* Before any copy attempt the same note is a quiet to-do, not a warning. */
+.output-gap[data-tone="hint"] {
+  background: var(--surface-low);
+  color: var(--text-muted);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.output-gap[data-tone="hint"] .output-gap-fill {
+  border-color: var(--border);
+  background: var(--island-bg);
+  color: var(--text-primary);
+}
+
+.output-gap svg {
+  flex: none;
+}
+
+.output-gap span {
+  flex: 1;
+}
+
+.output-gap-fill {
+  flex: none;
+  padding: 2px calc(var(--space) * 2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.output-gap-fill:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* The prompt box's wrapper only passes the flex sizing through. */
+.output-text-wrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.output-text {
+  --hl-pad: calc(var(--space) * 3);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  /* A thin themed bar inside the box, not a grey track on the panel's edge. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb, color-mix(in srgb, var(--text-muted) 40%, transparent)) transparent;
+  border-color: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: 1.55;
+}
+
+/* Inline only: the mirror must wrap exactly like the textarea above it. */
+.md-h {
+  color: var(--color-primary-darkest);
+  font-weight: 700;
+}
+
+.md-bullet {
+  color: var(--text-faint);
+}
+
+/* Lines a recompile just added: an accent tint that fades out. Background only, so glyph
+   widths (and the caret over the mirror) never move. */
+.md-new {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  animation: md-new-fade 1.6s ease-in forwards;
+}
+
+@keyframes md-new-fade {
+  0%,
+  40% {
+    background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* Markdown syntax kept for byte-identical output, drawn faint: `**` and a dangling dash. */
+.md-mark {
+  color: var(--text-faint);
+  font-weight: inherit;
+}
+
+.md-code {
+  font: inherit;
+  color: var(--color-primary-darker);
+}
+
+.output-error {
+  flex: 1;
+  margin: 0;
+  color: var(--danger);
+}
+
+.output-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  padding: 0 calc(var(--space) * 3);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .output-panel {
+    box-shadow: var(--shadow-modal);
+  }
+}
+
+@media (max-width: 730px) {
+  /* A bottom sheet: opaque down to the screen edge, with the tab bar floating over its foot. */
+  .output-panel.island {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: calc(58vh + var(--bar-h));
+    padding: calc(var(--space) * 3) calc(var(--space) * 4) calc(var(--island-inset) * 3 + var(--bar-h));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    z-index: var(--z-sheet);
+  }
+}
+
+/* A line still waiting for its text (a stage with no description, an empty prompt block): a
+   soft amber wash, background only so glyph widths and the caret stay put. */
+.md-gap {
+  background: var(--warn-bg);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ---- Preview / Markdown ------------------------------------------------ */
+
+.output-view {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.output-view-opt {
+  padding: 2px calc(var(--space) * 2);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: var(--weight-label);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.output-view-opt:hover {
+  color: var(--text-primary);
+}
+
+.output-view-opt[aria-checked="true"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+/* The Preview reads like a rendered chat message: the UI face at body size, headings set off
+   by space above them, list markers hanging in a gutter. */
+.output-preview {
+  padding: calc(var(--space) * 3) calc(var(--space) * 3.5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: var(--weight-body);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.output-preview:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+.output-preview .pv-gap {
+  height: 0.5rem;
+}
+
+.output-preview .pv-h {
+  margin-top: 0.75rem;
+  padding-bottom: 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.output-preview .pv-h:first-child {
+  margin-top: 0;
+}
+
+.output-preview .pv-item {
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  margin-block: 0.1rem;
+}
+
+.output-preview .pv-marker {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.output-preview strong {
+  font-weight: 700;
+}
+
+.output-preview .md-code {
+  padding: 0 0.25em;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.output-preview .md-gap {
+  margin-inline: -0.35rem;
+  padding-inline: 0.35rem;
+  border-radius: var(--radius-sm);
+}
+
+.output-preview .pv-hint {
+  margin-left: 0.5em;
+  color: var(--warn-text);
+  font-style: italic;
+  font-size: 0.8125rem;
+}

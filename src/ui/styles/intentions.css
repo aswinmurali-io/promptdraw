@@ -1,0 +1,703 @@
+/* ---- How to work: the fixed panel on the Simple task tab --------------------------------- */
+
+/* On the Simple task tab the right edge is How to work's: half the window, as it holds the Task
+   fields too. The Prompt panel takes the same place, at the same width, when it is asked for. */
+.app[data-mode="task"] {
+  --work-w: 50vw;
+  --output-w: var(--work-w);
+}
+
+.app[data-work="open"] {
+  --pad-r: calc(var(--work-w) + var(--island-inset) * 2);
+}
+
+/* The panel holds the right edge from top to bottom: the toolbar centres on the canvas left of
+   it, and Help moves beside it. */
+/* The toolbar holds still when the Prompt panel takes How to work's place. */
+@media (min-width: 731px) {
+  .app[data-mode="task"]:is([data-work="open"], [data-output="open"]) .region--top-center {
+    left: calc(var(--island-inset) + 5rem + var(--space) * 2);
+    right: calc(var(--work-w) + var(--island-inset));
+    justify-content: safe center;
+    transform: none;
+  }
+}
+
+/* Short of room beside the panel, the toolbar sheds its key badges, then its words but Copy
+   prompt's (the tooltips and accessible names keep them). */
+@media (max-width: 1720px) {
+  .app[data-mode="task"]:is([data-work="open"], [data-output="open"]) .toolbar .tool-key {
+    display: none;
+  }
+}
+
+@media (min-width: 731px) and (max-width: 1560px) {
+  .app[data-mode="task"]:is([data-work="open"], [data-output="open"]) .toolbar .tool-btn:not(.tool-primary) .tool-label {
+    display: none;
+  }
+}
+
+.app[data-work="open"] .region--bottom-right {
+  right: calc(var(--work-w) + var(--island-inset));
+}
+
+.work-panel.island {
+  position: absolute;
+  z-index: var(--z-island);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--work-w);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+  border-radius: 0;
+}
+
+/* The × is solid red: closing hides every option until the orange button brings it back. */
+.work-close.icon-btn {
+  background: var(--danger);
+  color: var(--color-on-primary);
+}
+
+.work-close.icon-btn:hover {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+/* Closed by its ×; the How to work button top right brings it back. */
+.work-panel[data-closed] {
+  display: none;
+}
+
+.work-head {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-right: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The title row: a plain heading on wide screens, the sheet's pull handle on phones. */
+.work-handle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 3rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: default;
+  font: inherit;
+}
+
+.work-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.work-panel[hidden] {
+  display: none !important;
+}
+
+.work-grip,
+.work-caret {
+  display: none;
+}
+
+/* Every part of the panel shares one 12px side inset: the title, the Task card, the search and
+   the rows all start on it. */
+.work-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.25rem 0.75rem 1rem;
+}
+
+/* Wide screens: the Task section above (40% unless dragged), a divider, then the options. */
+.work-split-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.work-top {
+  flex: none;
+  height: calc(var(--split, 0.4) * 100%);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+
+.work-top .work-task {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  margin: 0;
+}
+
+.work-top .sketch-card--task {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.work-top .goal-node .sketch-card--task .sketch-input {
+  flex: 1 1 0;
+  min-height: 3.5rem;
+  resize: none;
+}
+
+.work-top .goal-node .sketch-card--notes .sketch-input {
+  resize: none;
+}
+
+/* The divider: a full-width rule with a grip in the middle; drag, arrow keys, double-click. */
+.work-split {
+  position: relative;
+  flex: none;
+  height: 0.75rem;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.work-split::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  border-top: 1px solid var(--border);
+}
+
+.work-split-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: var(--surface-high);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transform: translate(-50%, -50%);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.work-split:hover .work-split-grip,
+.work-split:active .work-split-grip {
+  background: var(--color-primary);
+}
+
+.work-split:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* Search: stays at the top of the list while it scrolls, so a filter is always one tap away. */
+.work-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  padding: 0.25rem 0 0.35rem;
+  background: var(--island-bg);
+}
+
+.work-search-icon {
+  position: absolute;
+  left: 0.65rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.work-search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: 2.25rem;
+  box-sizing: border-box;
+  padding: 0.35rem 0.6rem 0.35rem 2.1rem;
+  border: 1px solid var(--surface-high);
+  border-radius: var(--radius-md);
+  background: var(--island-bg);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.work-search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.work-search-input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+/* Reset: a quiet text button beside the search; it asks before clearing (and Undo restores). */
+.work-reset {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.25rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--danger);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.work-reset:hover {
+  border-color: color-mix(in srgb, var(--danger) 85%, #000);
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+.work-reset:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* A ticked option's own settings, right under its row, indented to its words. */
+.work-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: -0.15rem 0 0.4rem;
+  padding: 0.55rem 0.75rem 0.65rem 2.6rem;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  font-size: 0.875rem;
+}
+
+.work-options .field:not(:disabled) {
+  color: var(--text-primary);
+  font-weight: var(--weight-body);
+}
+
+.work-empty {
+  margin: 1rem 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+/* How many are on, as a chip: accent tint once something is chosen. */
+.intentions-count {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-low);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.intentions-count[data-some="true"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+/* One run of options under a small all-caps heading (the inspector's section voice). */
+.intent-group-title {
+  margin: 0.9rem 0.5rem 0.3rem;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.work-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.work-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.4rem 0.35rem 0.45rem 0.5rem;
+  border-radius: var(--radius-md, 8px);
+}
+
+.work-row:hover {
+  background: var(--surface-low);
+}
+
+.work-row[data-on="true"] {
+  background: color-mix(in srgb, var(--color-primary-light) 55%, transparent);
+}
+
+.work-row:has(.intent-input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.work-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.work-row[data-blocked="true"] .work-main {
+  cursor: not-allowed;
+}
+
+.work-words {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.hand-check {
+  flex: none;
+  margin-top: -1px;
+  color: var(--text-muted);
+}
+
+.work-row[data-on="true"] .hand-check {
+  color: var(--color-primary);
+}
+
+.work-row[data-blocked="true"] .hand-check {
+  opacity: 0.4;
+}
+
+.hand-tick {
+  stroke-dasharray: 40;
+  animation: tick-draw 220ms var(--ease);
+}
+
+@keyframes tick-draw {
+  from {
+    stroke-dashoffset: 40;
+  }
+}
+
+.intent-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* A locked option names what it waits for in a chip, so it reads as locked rather than broken. */
+.intent-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding: 0.05rem 0.45rem 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--surface-low);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.intent-text {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.intent-text[data-clamp] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.work-tools {
+  display: flex;
+  flex: none;
+  gap: 1px;
+}
+
+.work-tool {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.work-tool:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+.work-tool:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.intent-more[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* ---- the board: the Task node, then the ticked options drawn by the Stages renderer --------- */
+
+.app[data-mode="task"] .canvas-sheet {
+  max-width: 96rem;
+}
+
+/* Left to right on every screen, as the Stages flow runs, from the Goal card; the board pans to
+   whatever runs past the screen. */
+.app .task-canvas {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  width: max-content;
+}
+
+/* The Task fields at the top of How to work: the Stages Goal card (lavender fill, accent
+   outline, card radius), as wide as the panel. */
+.work-task {
+  margin: 0;
+}
+
+.goal-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.4rem 0.6rem;
+}
+
+.card-frame {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.goal-node .sketch-card {
+  padding: 0.45rem 0.8rem 0.35rem;
+}
+
+.goal-node .sketch-card--notes {
+  border-top: 1.5px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
+  margin: 0 0.5rem;
+  padding-inline: 0.3rem;
+}
+
+/* The card's eyebrow: small caps in the accent, like GOAL on the Stages board. */
+.goal-eyebrow {
+  position: relative;
+  display: inline-block;
+  margin: 0 0 0.2rem;
+  color: var(--color-primary);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.goal-kind {
+  margin-right: 0.3em;
+}
+
+.goal-node .sketch-input {
+  font-size: 1.2rem;
+}
+
+.goal-node .sketch-card--task .sketch-input {
+  min-height: 6.5rem;
+  font-size: 1.35rem;
+}
+
+.lanes {
+  position: relative;
+  flex: none;
+  margin: 0;
+}
+
+.lanes-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* Locked options (switched off by another, or waiting on one that is off) are dimmed, with a
+   dashed outline and dashed arrows: they are on the board but will not run. */
+.lanes-svg .sk-card[data-locked],
+.lanes-svg .sk-edge[data-locked],
+.lanes-svg [data-locked].sk-frame,
+.lanes-svg [data-locked].sk-par-pill {
+  opacity: 0.42;
+}
+
+.lanes-svg .sk-card {
+  cursor: default;
+}
+
+.lanes-svg .sk-card--prompt,
+.lanes-svg .sk-card:has(.sk-del) {
+  cursor: pointer;
+}
+
+.lanes-svg .sk-frame {
+  cursor: default;
+}
+
+.lanes-hint {
+  position: absolute;
+  /* Below the board, never above it: above, it lands on the welcome card's border. */
+  top: calc(100% + 0.75rem);
+  left: 3.5rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.lanes-hint small {
+  display: block;
+  font-size: 1rem;
+}
+
+/* ---- narrower screens --------------------------------------------------------------------- */
+
+/* Phones: a handle above the tab bar that pulls the list up as a sheet. */
+@media (max-width: 730px) {
+  .app[data-work] {
+    --pad-r: calc(var(--island-inset) * 2);
+    --pad-b: calc(var(--island-inset) * 4 + var(--bar-h) + 3rem + 2rem);
+  }
+
+  .work-panel.island {
+    top: auto;
+    left: var(--island-inset);
+    right: var(--island-inset);
+    bottom: calc(var(--island-inset) * 2 + var(--bar-h));
+    width: auto;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+    border-radius: var(--radius-lg);
+    max-height: 3rem;
+    transition: max-height var(--duration-fast) var(--ease);
+  }
+
+  .work-panel[data-open] {
+    z-index: var(--z-sheet);
+    max-height: 70vh;
+    box-shadow: var(--shadow-modal);
+  }
+
+  /* Another sheet (Settings, Prompt) takes the screen: the handle steps aside. */
+  .app[data-sheet] .work-panel {
+    display: none;
+  }
+
+  .work-handle {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .work-head {
+    padding-right: 0;
+    border-bottom-color: transparent;
+  }
+
+  .work-panel[data-open] .work-head {
+    border-bottom-color: var(--border);
+  }
+
+  /* One scroller on a phone: the Task section and the options run on, with no divider. */
+  .work-panel[data-open] {
+    overflow-y: auto;
+  }
+
+  .work-split-area,
+  .work-body {
+    flex: none;
+    overflow: visible;
+  }
+
+  .work-top {
+    height: auto;
+    overflow: visible;
+  }
+
+  .work-split {
+    display: none;
+  }
+
+  /* On phones the panel is a pull-up sheet: it is never closed, so no × and no reopen button. */
+  .work-panel[data-closed] {
+    display: flex;
+  }
+
+  .work-head .work-close,
+  .region .tool-btn.work-open {
+    display: none;
+  }
+
+  .work-title {
+    font-size: 1.3rem;
+  }
+
+  .work-caret {
+    display: block;
+    color: var(--text-muted);
+    transform: rotate(180deg);
+  }
+
+  .work-panel[data-open] .work-caret {
+    transform: none;
+  }
+
+  .work-grip {
+    display: block;
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 2.25rem;
+    height: 4px;
+    margin-left: -1.125rem;
+    border-radius: 2px;
+    background: var(--border-strong, var(--border));
+  }
+}

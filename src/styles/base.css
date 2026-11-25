@@ -1,0 +1,41 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--canvas-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-body);
+  line-height: 1.4;
+  overflow: hidden; /* the canvas is the page; islands float over it */
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.hand {
+  font-family: var(--font-hand);
+  font-weight: var(--weight-hand);
+}
+
+kbd {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  padding: 0 var(--space);
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--border);
+}

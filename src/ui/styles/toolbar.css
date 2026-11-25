@@ -1,0 +1,393 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: var(--divider-height);
+  margin: 0 var(--space);
+  background: var(--border);
+}
+
+/* ---- labelled tool buttons: icon, words, key ------------------------- */
+
+.tool-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: var(--button-lg);
+  padding: 0 0.6rem 0 0.55rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tool-btn > svg {
+  flex: none;
+}
+
+.tool-btn:hover:not(:is(:disabled, [aria-disabled="true"])) {
+  background: var(--surface-high);
+}
+
+.tool-btn:active:not(:is(:disabled, [aria-disabled="true"])) {
+  background: var(--surface-primary-container);
+}
+
+.tool-btn[aria-pressed="true"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+/* Modes: a segmented control. The track is quiet and the current mode is a solid pill, so it
+   can never be mistaken for an open panel. */
+.toolbar-group--modes {
+  gap: 0;
+  padding: 2px;
+  border-radius: calc(var(--radius-md) + 2px);
+  background: var(--surface-low);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.toolbar-group--modes .tool-btn {
+  height: calc(var(--button-lg) - 4px);
+}
+
+.toolbar-group--modes .tool-btn[aria-pressed="true"] {
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-island);
+}
+
+.toolbar-group--modes .tool-btn[aria-pressed="true"] .tool-key {
+  background: color-mix(in srgb, var(--color-on-primary) 22%, transparent);
+  color: var(--color-on-primary);
+}
+
+/* Panel toggles: a side-panel glyph (its pane ruled off, filled while the panel shows) and a
+   word. A shown panel takes a pale accent tint with accent words, the same "on" as a pressed
+   tool, never the solid pill that marks the mode. */
+.icon-pane {
+  fill: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.toolbar-group--panels .tool-btn[aria-pressed="true"] .icon-pane {
+  opacity: 0.4;
+}
+
+.toolbar-group--panels .tool-btn[aria-pressed="true"] {
+  box-shadow: none;
+}
+
+.toolbar-group--panels .tool-btn[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--island-bg));
+}
+
+@media (max-width: 730px) {
+  /* A shown panel is marked like a tab, accent words over a short accent bar, never a filled
+     pill: on a small screen the filled pill in its track means the mode, and only the mode. */
+  .toolbar-group--panels .tool-btn[aria-pressed="true"],
+  .toolbar-group--panels .tool-btn[aria-pressed="true"]:hover {
+    background: linear-gradient(var(--color-primary), var(--color-primary)) center bottom / 1.75rem 2.5px no-repeat;
+    color: var(--color-primary-darkest);
+    box-shadow: none;
+  }
+
+  /* The mode segments get room inside their pill, so "Task" never touches its edge. */
+  .toolbar .toolbar-group--modes .tool-btn {
+    padding-inline: 0.6rem;
+  }
+}
+
+.tool-btn:is(:disabled, [aria-disabled="true"]) {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.tool-key {
+  min-width: 1.05rem;
+  padding: 0 0.2rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  color: var(--text-muted);
+  font-size: var(--text-shortcut);
+  font-weight: var(--weight-label);
+  line-height: 1.1rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.tool-btn[aria-pressed="true"] .tool-key {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary-darkest);
+}
+
+/* In the top toolbar the mode and panel keys stay out of the way until they are useful: a faint
+   digit with no chip at rest, the chip on hover or keyboard focus (they keep their room, so
+   nothing shifts). Words carry the toolbar; the tooltip names each key too. */
+.toolbar :is(.toolbar-group--modes, .toolbar-group--panels) .tool-key {
+  background: transparent;
+  color: var(--text-faint);
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.toolbar :is(.toolbar-group--modes, .toolbar-group--panels) .tool-btn:is(:hover, :focus-visible) .tool-key {
+  background: var(--surface-low);
+  color: var(--text-muted);
+}
+
+.toolbar .toolbar-group--modes .tool-btn[aria-pressed="true"] .tool-key {
+  background: transparent;
+  color: color-mix(in srgb, var(--color-on-primary) 70%, transparent);
+}
+
+.toolbar .toolbar-group--panels .tool-btn[aria-pressed="true"] .tool-key {
+  background: transparent;
+  color: color-mix(in srgb, var(--color-primary-darkest) 55%, transparent);
+}
+
+.tool-btn:is(:disabled, [aria-disabled="true"]) .tool-key {
+  color: var(--text-faint);
+}
+
+/* Tooltip: full name and key, then a one-line description. */
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 16rem;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--text-primary);
+  color: var(--canvas-bg);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: var(--weight-body);
+  line-height: 1.35;
+  text-align: left;
+  text-transform: none;
+  white-space: pre-line;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease);
+  z-index: var(--z-tooltip);
+}
+
+/* Placement (App sets it as the pointer arrives): above a button near the window's foot, and
+   flush with a button near a side edge instead of centred past it. */
+[data-tooltip][data-tip-pos="top"]::after {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+[data-tooltip][data-tip-align="end"]::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+[data-tooltip][data-tip-align="start"]::after {
+  left: 0;
+  transform: none;
+}
+
+/* Keyboard travel only (App sets data-nav on Tab / arrow keys): focus a closing menu hands
+   back must not leave a tooltip over the islands beside it. */
+:root[data-nav="keys"] [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transition-delay: 350ms;
+}
+
+/* Never over the popover a button just opened, nor right after a press: the tooltip has done
+   its job once the button is used (it comes back on the next hover). */
+[data-tooltip][aria-expanded="true"]::after,
+[data-tooltip][data-tip-off]::after {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* Only real hover shows it: on touch a tap would leave it stuck open. */
+@media (hover: hover) {
+  [data-tooltip]:hover::after {
+    opacity: 1;
+    transition-delay: 350ms;
+  }
+}
+
+/* One way to add a block per width: direct tools and More ▾ on wide screens, a single Add ▾
+   menu on phones (see stages.css). */
+.stage-add,
+.stage-fit {
+  display: none;
+}
+
+/* As width runs short the stage bar sheds key badges, then the file buttons' words, then
+   all words (the tooltips and accessible names keep them). */
+@media (max-width: 1180px) {
+  .stage-bar .tool-key {
+    display: none;
+  }
+
+  .stage-bar .tool-btn {
+    padding: 0 0.5rem 0 0.45rem;
+  }
+}
+
+/* Mid-size: the main toolbar drops the key badges first. */
+@media (max-width: 900px) {
+  .toolbar .tool-key {
+    display: none;
+  }
+
+  .tool-btn {
+    padding: 0 0.45rem;
+  }
+}
+
+/* A label with a phone form (Simple task -> Task) shows it only on the phone tab bar. */
+.tool-label-phone {
+  display: none;
+}
+
+/* Phones: the toolbar sits at the bottom; labels go under the icons, like a tab bar. */
+@media (max-width: 730px) {
+  .toolbar .tool-label-wide {
+    display: none;
+  }
+
+  .toolbar .tool-label-phone {
+    display: inline;
+  }
+
+  .toolbar .tool-btn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    height: auto;
+    min-height: var(--button-lg);
+    /* The same height as before, shifted 2px down: room under the words for a shown panel's
+       indicator bar. */
+    padding: 1px 0.35rem 4px;
+    font-size: var(--text-small);
+    line-height: 1.1;
+  }
+
+  [data-tooltip]::after {
+    top: auto;
+    bottom: calc(100% + 8px);
+  }
+}
+
+/* How to work, closed: an orange island top right that brings it back. */
+.tool-btn.work-open.island {
+  background: var(--work-open-bg);
+  color: var(--work-open-ink);
+}
+
+.tool-btn.work-open.island:hover {
+  background: color-mix(in srgb, var(--work-open-bg) 88%, #000);
+}
+
+/* Solo islands that carry a label: the main menu (top-left) and help (bottom-right). */
+.tool-btn.menu-trigger,
+.tool-btn.help-trigger,
+.tool-btn.work-open {
+  height: calc(var(--button-lg) + var(--island-padding) * 2);
+  padding: 0 0.8rem 0 0.7rem;
+  border-radius: var(--radius-lg);
+  background: var(--island-bg);
+}
+
+.menu-trigger[aria-expanded="true"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+.help-trigger::after {
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 8px);
+  transform: none;
+}
+
+.menu-trigger::after {
+  left: 0;
+  transform: none;
+}
+
+@media (max-width: 730px) {
+  .help-trigger .tool-label {
+    display: none;
+  }
+}
+
+/* Bottom islands: tooltips open upward. */
+.region--bottom-left [data-tooltip]::after {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+
+.zoom-value {
+  position: relative;
+}
+
+/* Copy: the one primary action, a solid accent button at the toolbar's right end. */
+.toolbar-group--primary {
+  padding-left: 2px;
+}
+
+.toolbar .tool-primary {
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
+}
+
+/* After a copy the label reads "Copied" for a moment: it always keeps room for the longer
+   "Copy prompt" (a hidden, zero-height copy of it in the label's one-column grid), so the
+   toolbar never changes width. */
+.toolbar .tool-primary .tool-label {
+  display: inline-grid;
+  justify-items: center;
+}
+
+.toolbar .tool-primary .tool-label::after {
+  content: "Copy prompt";
+  height: 0;
+  visibility: hidden;
+}
+
+.toolbar .tool-primary:hover:not(:is(:disabled, [aria-disabled="true"])) {
+  background: var(--color-primary-fill-hover);
+}
+
+.toolbar .tool-primary:active:not(:is(:disabled, [aria-disabled="true"])) {
+  background: var(--color-primary-fill-active);
+}
+
+.toolbar .tool-primary:is(:disabled, [aria-disabled="true"]) {
+  background: var(--surface-low);
+  color: var(--text-faint);
+}
+
+/* On the phone tab bar Copy stays the one filled action, as on desktop: the accent pill marks
+   the job's last step at the thumb. */

@@ -1,0 +1,173 @@
+/* HighlightArea: a transparent textarea over a mirror that draws the highlighted text. */
+.hl {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  color: var(--text-primary);
+}
+
+.hl:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.hl-mirror,
+.hl-input {
+  grid-area: 1 / 1;
+  margin: 0;
+  padding: var(--hl-pad, calc(var(--space) * 1.5) calc(var(--space) * 2));
+  border: 0;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: normal;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  tab-size: 4;
+}
+
+.hl-mirror {
+  min-width: 0;
+  pointer-events: none;
+}
+
+.hl-input {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-primary);
+  outline: none;
+  appearance: none;
+}
+
+.hl-input::placeholder {
+  color: var(--text-faint);
+}
+
+.hl-input::selection {
+  background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  color: transparent;
+}
+
+/* Width-neutral emphasis: a faux bold that keeps glyph advances. */
+.hl-bold {
+  text-shadow:
+    0.4px 0 0 currentColor,
+    -0.2px 0 0 currentColor;
+}
+
+.hl-muted {
+  color: var(--text-faint);
+}
+
+.hl-fill {
+  border-radius: 2px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+/* A bare SNAKE_CASE constant: a teal tint, colour only, so the caret never drifts. */
+.hl-const {
+  --const: #0f766e;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--const) 10%, transparent);
+  color: var(--const);
+}
+
+:root[data-theme="dark"] .hl-const {
+  --const: #5eead4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hl-const {
+    --const: #5eead4;
+  }
+}
+
+/* An A/B marker ({{#if play_bot}}, {{#else}}, {{/if}}, {{@flag}}): the A/B orange, outlined like a call chip. */
+.hl-flag {
+  --ab: #c2410c;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ab) 10%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ab) 55%, transparent);
+  color: var(--ab);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+:root[data-theme="dark"] .hl-flag {
+  --ab: #fb923c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hl-flag {
+    --ab: #fb923c;
+  }
+}
+
+/* A [[Function: …]] call: drawn as a chip with an outline, never padding. */
+.hl-call {
+  --fn: #c026d3;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--fn) 10%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fn) 55%, transparent);
+  color: var(--fn);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+:root[data-theme="dark"] .hl-call {
+  --fn: #e879f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hl-call {
+    --fn: #e879f9;
+  }
+}
+
+/* Markdown in the editor mirror. Colour, tint and vertical padding only: vertical padding on
+   an inline box paints taller without moving the line, so fenced lines read as one band. */
+.hl-code {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-primary) 11%, transparent);
+  color: var(--color-primary-darkest);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hl-fence {
+  padding-block: 0.22em;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary-darkest);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hl-fence-mark {
+  padding-block: 0.22em;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--text-faint);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hl-heading {
+  color: var(--color-primary-darkest);
+  text-shadow:
+    0.4px 0 0 currentColor,
+    -0.2px 0 0 currentColor;
+}
+
+.hl-list {
+  color: var(--color-primary);
+  text-shadow:
+    0.4px 0 0 currentColor,
+    -0.2px 0 0 currentColor;
+}

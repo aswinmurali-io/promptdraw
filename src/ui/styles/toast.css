@@ -1,0 +1,42 @@
+/* Just above the foot row of islands (zoom, the stage tools, help), the same offset on both
+   tabs, so it never covers a tool. */
+.toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--island-inset) * 2 + var(--button-lg) + var(--island-padding) * 2);
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  min-height: calc(var(--button-lg) + var(--island-padding) * 2);
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  padding: calc(var(--space) * 2) calc(var(--space) * 3);
+  font-weight: var(--weight-heading);
+  max-width: min(32rem, calc(100vw - 2rem));
+}
+
+.toast svg {
+  color: var(--color-primary);
+  flex: none;
+}
+
+.toast--error {
+  color: var(--danger);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 730px) {
+  .toast-region {
+    bottom: calc(var(--island-inset) * 4 + var(--button-lg) * 2 + 1rem);
+  }
+}

@@ -1,0 +1,12 @@
+.lat-build
+node_modules
+dist
+*.tsbuildinfo
+.DS_Store
+coverage
+.claude
+.mcp.json
+test-results
+playwright-report
+release
+release.zip

@@ -1,0 +1,237 @@
+/* A compact header card: wordmark, one line of purpose and a row of quick actions, so the
+   Task card below it is in view on first load. */
+.welcome-card {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1.25rem 0.9rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.welcome-wordmark {
+  margin: 0;
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-primary);
+}
+
+/* 1 Describe → 2 Tick → 3 Copy: the job in one line, numbered like the hints around it. */
+.welcome-steps {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 1.4rem;
+  margin: 0.35rem 0 0.2rem;
+  padding: 0;
+  list-style: none;
+  font-weight: var(--weight-heading);
+}
+
+.welcome-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.welcome-steps li + li::before {
+  content: "→";
+  position: absolute;
+  left: -1.05rem;
+  color: var(--text-faint);
+  font-weight: var(--weight-body);
+}
+
+/* Too narrow for the full wording (a phone, or both side panels open): the steps keep one
+   line as bare verbs, 1 Describe → 2 Tick → 3 Copy. */
+.welcome-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 40rem) {
+  .welcome-steps {
+    gap: 0.3rem 1.3rem;
+  }
+
+  .welcome-step-rest {
+    display: none;
+  }
+}
+
+.welcome-step-n {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
+  font-size: var(--text-small);
+  font-weight: var(--weight-title);
+  line-height: 1;
+}
+
+.welcome-sub {
+  position: relative;
+  max-width: 34rem;
+  margin: 0.1rem auto 0.55rem;
+  font-size: var(--text-label);
+  line-height: 1.4;
+}
+
+/* Got it: the way out, an accent outline so it reads as a button, not a stray label. */
+.welcome-dismiss.btn--outline {
+  border: 1.5px solid var(--color-primary);
+  background: transparent;
+  color: var(--color-primary-darkest);
+  font-weight: var(--weight-heading);
+}
+
+.welcome-dismiss.btn--outline:hover {
+  background: var(--color-primary-light);
+}
+
+.welcome-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-action {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.welcome-action kbd {
+  margin-left: 0.15rem;
+}
+
+.welcome-action:hover {
+  background: var(--surface-high);
+}
+
+/* Got it closes the row of actions, inside the frame rather than pinned on its border. */
+.welcome-actions {
+  align-items: center;
+}
+
+.welcome-dismiss-item {
+  display: flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--border);
+}
+
+/* Touch screens: no key chips, no keyboard-only actions, a smaller wordmark, so the card
+   takes a strip of the first screen rather than most of it. */
+@media (pointer: coarse) {
+  .welcome-action kbd,
+  .welcome-actions [data-keys] {
+    display: none;
+  }
+}
+
+/* Phones: a strip, not a poster: a smaller wordmark, the steps and the actions; the purpose
+   line goes (the steps already say it). */
+@media (max-width: 600px) {
+  .welcome-card {
+    padding: 0.6rem 0.9rem 0.65rem;
+  }
+
+  .welcome-wordmark {
+    font-size: 1.45rem;
+  }
+
+  .welcome-steps {
+    margin: 0.25rem 0 0.4rem;
+  }
+
+  .welcome-sub {
+    display: none;
+  }
+}
+
+.welcome-arrows {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas-overlay);
+  pointer-events: none;
+  font-family: var(--font-hint);
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.hint {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.hint svg {
+  flex: none;
+  color: var(--color-primary);
+}
+
+.hint--menu {
+  top: var(--island-inset);
+  left: calc(var(--island-inset) + 5.5rem);
+  align-items: center;
+}
+
+.hint--toolbar {
+  top: calc(var(--island-inset) + 0.25rem);
+  left: calc(50% + 20rem);
+  align-items: center;
+}
+
+/* Beside the Help island on the bottom row (above it the Prompt panel would cover it). */
+.hint--help {
+  bottom: calc(var(--island-inset) + 0.35rem);
+  right: calc(var(--island-inset) + 5.25rem);
+  align-items: center;
+}
+
+/* Hints point at fixed island positions; on narrow screens they would overlap content. */
+@media (max-width: 1100px) {
+  .welcome-arrows {
+    display: none;
+  }
+}
+
+/* Simple task with How to work (or the Prompt panel in its place) on the right edge: the
+   toolbar moves left beside it, so no room is left for the Copy hint (the welcome card's step 3
+   says it) and, on smaller screens, the Menu hint; Help's hint follows Help. */
+.app[data-mode="task"]:is([data-work="open"], [data-output="open"]) .hint--toolbar {
+  display: none;
+}
+
+@media (max-width: 1400px) {
+  .app[data-mode="task"]:is([data-work="open"], [data-output="open"]) .hint--menu {
+    display: none;
+  }
+}
+
+.app[data-work="open"] .hint--help {
+  right: calc(var(--work-w) + var(--island-inset) + 5.25rem);
+}

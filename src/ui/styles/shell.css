@@ -1,0 +1,644 @@
+/*
+ * App shell: a full-viewport canvas with floating islands pinned to its edges.
+ * Islands are positioned by region classes; the canvas pads itself so content
+ * never sits under an open island.
+ */
+
+.app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* Clip, not just hide: a hidden box can still be scrolled by focus() or scrollIntoView,
+     which would slide every island off the top of the screen with no way back. */
+  overflow: clip;
+  --props-w: 17rem;
+  --output-w: 26rem;
+  --top-h: calc(var(--button-lg) + var(--island-padding) * 2);
+}
+
+/* ---- canvas ---------------------------------------------------------- */
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  background-color: var(--canvas-bg);
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  outline: none;
+}
+
+/* Where content rests clear of the islands: the Task board pads its world with these. The top
+   leaves 24px under the toolbar, which floats over the board's middle column, so a card's rough
+   frame never meets the toolbar's shadow. */
+.app {
+  --pad-t: calc(var(--island-inset) * 2 + var(--top-h) + 0.75rem);
+  --pad-r: calc(var(--island-inset) * 2);
+  --pad-b: calc(var(--island-inset) * 2 + var(--button-lg) + 1rem);
+  --pad-l: calc(var(--island-inset) * 2);
+}
+
+.app[data-props="open"] {
+  --pad-l: calc(var(--props-w) + var(--island-inset) * 3);
+}
+
+.app[data-output="open"] {
+  --pad-r: calc(var(--output-w) + var(--island-inset) * 3);
+}
+
+/* The Task sheet is centred in the free canvas, so on a laptop its lower-left cards pass under
+   the zoom and history islands. The board's content is masked out along its foot: it dissolves
+   over 3.5rem and is gone a few pixels above the island row's top, so no card text ever sits
+   half hidden behind an island, while the dot grid (on the canvas, not the board) runs on to
+   the edge. It reads as "more below"; the bottom padding lets the last card scroll clear. */
+@media (min-width: 731px) {
+  .app[data-mode="task"] .task-viewport {
+    --foot: calc(var(--island-inset) + var(--button-lg) + var(--island-padding) * 2 + 6px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot) - 3.5rem), transparent calc(100% - var(--foot)));
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot) - 3.5rem), transparent calc(100% - var(--foot)));
+  }
+}
+
+/* Phones: the board scrolls under the menu; a short fade keeps text from colliding with it. */
+@media (max-width: 730px) {
+  .app[data-mode="task"] .canvas::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: var(--z-canvas-overlay);
+    height: calc(var(--island-inset) * 2 + var(--button-lg) + var(--island-padding) * 2);
+    background: linear-gradient(var(--canvas-bg) 55%, transparent);
+    pointer-events: none;
+  }
+}
+
+/* ---- Task board: a pannable, zoomable world under the islands ---------- */
+
+.app[data-mode="task"] .canvas {
+  overflow: clip;
+}
+
+.task-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  cursor: grab;
+  touch-action: none;
+  /* A board, not a page: drags pan instead of selecting card text. Fields stay selectable. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.task-viewport :is(textarea, input, select) {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.task-viewport[data-panning],
+.task-viewport[data-panning] * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.task-viewport[data-space] textarea,
+.task-viewport[data-space] label,
+.task-viewport[data-space] button {
+  cursor: grab;
+}
+
+.task-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--pad-t) var(--pad-r) var(--pad-b) var(--pad-l);
+  transform-origin: 0 0;
+}
+
+.app[data-dragging="true"] .canvas {
+  box-shadow: inset 0 0 0 3px var(--color-primary);
+}
+
+.canvas-sheet {
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+/* ---- islands --------------------------------------------------------- */
+
+.island {
+  background: var(--island-bg);
+  border: var(--island-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-island);
+  padding: var(--island-padding);
+}
+
+.region {
+  position: absolute;
+  z-index: var(--z-island);
+  display: flex;
+  gap: var(--space);
+  pointer-events: none;
+}
+
+.region > * {
+  pointer-events: auto;
+}
+
+.region--top-left {
+  top: var(--island-inset);
+  left: var(--island-inset);
+  /* Its menu drops over the stage bar, which starts beside the button. */
+  z-index: var(--z-island-raised);
+}
+
+/* A tooltip showing lifts its island over the panels beside it, so a stage-bar tooltip is
+   never cut by the Prompt panel or its fade. */
+.region:has([data-tooltip]:hover),
+:root[data-nav="keys"] .region:has([data-tooltip]:focus-visible) {
+  z-index: var(--z-popover);
+}
+
+/* An open main menu drops over everything but dialogs, phone bottom sheets included. */
+.region--top-left:has(.menu-trigger[aria-expanded="true"]) {
+  z-index: var(--z-popover);
+}
+
+.region--top-center {
+  top: var(--island-inset);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.region--top-right {
+  top: var(--island-inset);
+  right: var(--island-inset);
+}
+
+.region--bottom-left {
+  bottom: var(--island-inset);
+  left: var(--island-inset);
+  gap: calc(var(--space) * 2);
+}
+
+.region--bottom-right {
+  bottom: var(--island-inset);
+  right: var(--island-inset);
+}
+
+/* ---- buttons & fields (shared) --------------------------------------- */
+
+.icon-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--button-lg);
+  height: var(--button-lg);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-high);
+}
+
+.icon-btn:active:not(:disabled) {
+  background: var(--surface-primary-container);
+}
+
+.icon-btn[aria-pressed="true"],
+.icon-btn[aria-checked="true"],
+.icon-btn[aria-selected="true"] {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+.icon-btn:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.icon-btn--sm {
+  width: var(--button-md);
+  height: var(--button-md);
+}
+
+.icon-btn--solo {
+  background: var(--island-bg);
+  box-shadow: var(--shadow-island);
+  border: var(--island-border);
+  border-radius: var(--radius-lg);
+}
+
+.icon-btn--round {
+  border-radius: 999px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) * 1.5);
+  height: var(--button-md);
+  padding: 0 calc(var(--space) * 3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: var(--weight-heading);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-high);
+}
+
+.btn--primary {
+  background: var(--color-primary-fill);
+  color: var(--color-on-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-fill-hover);
+}
+
+.btn--primary:active:not(:disabled) {
+  background: var(--color-primary-darkest);
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(0.92);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.field {
+  width: 100%;
+  min-width: 0;
+  height: var(--button-md);
+  padding: 0 calc(var(--space) * 2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+.field:disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+.field[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field--mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- hand-drawn cards on the canvas ---------------------------------- */
+
+.task-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sketch-card {
+  position: relative;
+  padding: 0.9rem 1.1rem 1rem;
+  color: var(--text-primary);
+}
+
+.rough-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--text-primary);
+  opacity: 0.85;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.rough-hachure {
+  opacity: 0.18;
+}
+
+.sketch-title {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.sketch-input {
+  position: relative;
+  display: block;
+  width: 100%;
+  resize: vertical;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  line-height: 1.5;
+  padding: 0.25rem 0.35rem;
+}
+
+/* A finger can't grab the resize corner; on touch it only drew a stray dot. */
+@media (pointer: coarse) {
+  .sketch-input {
+    resize: none;
+  }
+}
+
+.sketch-input::placeholder {
+  color: var(--text-faint);
+}
+
+.sketch-input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  background: var(--selection-fill);
+}
+
+/* ---- stages mount placeholder ---------------------------------------- */
+
+.stages-mount {
+  min-height: 20rem;
+}
+
+.stages-placeholder p {
+  margin: 0 0 0.75rem;
+}
+
+.stages-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.stages-stats dt {
+  font-size: var(--text-label);
+  color: var(--text-muted);
+}
+
+.stages-stats dd {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+}
+
+.stages-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  columns: 2 14rem;
+  font-size: 1.05rem;
+}
+
+.stages-num {
+  display: inline-block;
+  min-width: 2.2em;
+  color: var(--color-primary);
+}
+
+/* ---- responsive ------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .app {
+    --output-w: 21rem;
+    --props-w: 15.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Panels float over the canvas instead of pushing it. */
+  .app[data-props="open"],
+  .app[data-output="open"] {
+    --pad-l: calc(var(--island-inset) * 2);
+    --pad-r: calc(var(--island-inset) * 2);
+  }
+}
+
+@media (max-width: 730px) {
+  /* The board scrolls like a page here: content passing under the menu row fades out instead
+     of running into the Menu island. */
+  .app::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: calc(var(--z-island) - 1);
+    height: calc(var(--pad-t) - var(--island-inset) / 2);
+    background: linear-gradient(var(--canvas-bg) 70%, transparent);
+    pointer-events: none;
+  }
+
+  /* And at the foot: on the Task page, cards scrolling down to the floating tab bar fade
+     out behind it rather than run under its buttons (the board's bottom padding already lets
+     the last card scroll clear of it). */
+  .app[data-mode="task"]::before {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    z-index: calc(var(--z-island) - 1);
+    height: calc(var(--island-inset) * 2 + var(--bar-h) + 1.5rem);
+    background: linear-gradient(transparent, var(--canvas-bg) 55%);
+    pointer-events: none;
+  }
+
+  .region--top-center {
+    top: auto;
+    bottom: var(--island-inset);
+    /* The tab bar floats over the foot of an open sheet. */
+    z-index: var(--z-sheet-bar);
+  }
+
+  .region--bottom-left,
+  .region--bottom-right {
+    bottom: calc(var(--island-inset) * 2 + var(--bar-h));
+  }
+
+  /* --bar-h: the bottom tool bar (labels under icons); on Stages the stage bar adds a row. */
+  .app {
+    --bar-h: 3rem;
+    --pad-t: calc(var(--island-inset) * 2 + var(--button-lg) + var(--island-padding) * 2);
+    --pad-b: calc(var(--island-inset) * 4 + var(--bar-h) + var(--button-lg) + 2rem);
+  }
+
+  .app[data-mode="stages"] {
+    --bar-h: calc(6rem + var(--island-padding) * 2 + var(--space) * 2);
+  }
+
+  /* An open sheet keeps the stage tools: they dock with the tab bar as a second opaque row
+     across the foot (the sheet's padding already leaves room for both), so Add, Loop and
+     Parallel stay one tap away while a stage is being edited. */
+  .app[data-sheet] .region--stage-bar {
+    z-index: var(--z-sheet-bar);
+    left: 0;
+    right: 0;
+    padding: var(--space) var(--island-inset) 0;
+    background: var(--island-bg);
+    box-shadow: 0 -1px 0 var(--border);
+  }
+
+  .app[data-sheet] .stage-bar {
+    box-shadow: none;
+    border: 0;
+  }
+
+  /* With a sheet open the tab bar docks: an opaque strip across the foot, so the sheet's
+     content scrolls under it cleanly instead of peeking out beside a floating island. The
+     buttons keep their place. */
+  .app[data-sheet] .region--top-center {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: center;
+    padding: var(--space) var(--island-inset) calc(var(--island-inset) + env(safe-area-inset-bottom, 0px));
+    transform: none;
+    background: var(--island-bg);
+    box-shadow: 0 -1px 0 var(--border);
+  }
+
+  .app[data-sheet] .region--top-center .toolbar {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- bottom-left zoom + history islands ------------------------------ */
+
+.zoom-island,
+.history-island {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.zoom-value {
+  min-width: 3.5rem;
+  height: var(--button-md);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.zoom-value:hover {
+  background: var(--surface-high);
+}
+
+/* Zoom and undo / redo icons at the toolbar's weight (18px, a 2px-equivalent stroke) so they
+   hold their own beside the 600-weight words; disabled ones stay the faint grey. */
+.zoom-island .icon-btn svg,
+.history-island .icon-btn svg {
+  stroke-width: 2;
+}
+
+.zoom-island .toolbar-divider {
+  margin: 0 2px;
+}
+
+.tool-btn.zoom-fit {
+  height: var(--button-md);
+  padding: 0 0.6rem 0 0.5rem;
+}
+
+/* Phones: no floating islands over the canvas foot, so only the tool rows stack there. The
+   Task page zooms with the browser, the stage canvas with a pinch (Fit sits in the stage
+   bar); undo and redo move into the main menu, and help lives in the menu everywhere. */
+@media (max-width: 730px) {
+  .zoom-island,
+  .history-island,
+  .region--bottom-right {
+    display: none;
+  }
+}
+
+/* The accent is the one mark of focus: a card's frame takes it only while you type in it, so
+   the Task card at rest never reads as already selected. */
+.sketch-card:focus-within .rough-frame {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+.sketch-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.35rem;
+}
+
+.sketch-title-row .sketch-title {
+  margin: 0;
+}
+
+/* The Task card is the one thing to fill in: while it is empty a small accent tag says so. */
+.start-tag {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+  font-family: var(--font-ui);
+  font-size: var(--text-small);
+  font-weight: 700;
+  line-height: 1.5;
+}

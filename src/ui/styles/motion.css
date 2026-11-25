@@ -1,0 +1,207 @@
+/* ---- Motion ------------------------------------------------------------------------------
+   The app's motion spec in CSS (the rest is script-driven, in lib/motion). Only transform and
+   opacity move. Entries wait for `:root[data-motion]`, set two frames after the first paint, so
+   a reload draws everything in place; reduced motion turns all of it off (shell.css).
+   @lat: [[design#Design language#Motion]] */
+
+/* Hover, press and focus: colour changes ease, a press dips to 97%. */
+.tool-btn,
+.icon-btn,
+.btn,
+.work-reset,
+.menu-item,
+.work-row,
+.intent-more {
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out),
+    transform 80ms var(--ease-out);
+}
+
+:is(.tool-btn, .icon-btn, .btn, .work-reset):active:not(:is(:disabled, [aria-disabled="true"])) {
+  transform: scale(0.97);
+}
+
+/* The row chevron turns over as it opens the exact prompt line. */
+.intent-more svg {
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+/* The Task fields' frame eases its colour on focus. */
+.goal-node :is(textarea, .goal-frame, path) {
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out),
+    stroke var(--dur-1) var(--ease-out);
+}
+
+/* Locking (Inline agent only) dims a board card, edge or frame gradually. */
+.lanes-svg :is(.sk-card, .sk-edge, .sk-frame, .sk-par-pill) {
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+/* How to work, closing: it slides out by its own width (wide screens). Its entries are played
+   from WorkPanel, which knows whether it was closed or only covered by the Prompt panel. */
+@media (min-width: 731px) {
+  :root[data-motion] .work-panel.island[data-closed] {
+    transform: translateX(100%);
+    transition:
+      transform var(--dur-3) var(--ease-in),
+      display var(--dur-3) allow-discrete;
+  }
+}
+
+/* Covered by the Prompt panel (or the Prompt panel covered by How to work, or the inspector): the
+   outgoing panel fades in 120 ms while the incoming one slides in. */
+:root[data-motion] :is(.work-panel, .output-panel)[hidden] {
+  opacity: 0;
+  transition:
+    opacity var(--dur-1) var(--ease-in),
+    display var(--dur-1) allow-discrete;
+}
+
+/* Popovers and menus: fade, a 4px drop and 98% -> 100%. */
+:root[data-motion] :is(.menu.island, .pop-menu) {
+  animation: pop-in var(--dur-2) var(--ease-out) both;
+  transform-origin: top left;
+}
+
+/* The reopen button for How to work. */
+:root[data-motion] .work-open {
+  animation: grow-in var(--dur-2) var(--ease-out) both;
+}
+
+/* A ticked option's settings open under its row. */
+:root[data-motion] .work-options {
+  animation: drop-in var(--dur-2) var(--ease-out) both;
+}
+
+/* Rows that come back as the search widens. */
+:root[data-motion] .work-list > li {
+  animation: fade-up var(--dur-2) var(--ease-out) both;
+}
+
+/* Dialogs: the backdrop fades and the dialog grows from 96%. */
+:root[data-motion] .backdrop {
+  animation: fade-up-plain var(--dur-2) var(--ease-out) both;
+}
+
+:root[data-motion] .backdrop > .dialog {
+  animation: grow-in var(--dur-3) var(--ease-out) both;
+}
+
+/* Toasts rise 6px. */
+.toast {
+  animation: toast-in var(--dur-2) var(--ease-out);
+}
+
+/* Copy prompt -> Copied: the icon cross-fades and the tick draws itself. */
+:root[data-motion] .tool-primary .tool-icon-swap {
+  animation: fade-up-plain var(--dur-1) var(--ease-out) both;
+}
+
+:root[data-motion] .tool-primary[data-copied] .tool-icon-swap path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--dur-2) var(--ease-out) 60ms forwards;
+}
+
+/* The welcome hints: each arrow draws, then its words fade in, 60 ms apart. */
+.welcome-arrows .hint path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw var(--dur-3) var(--ease-out) forwards;
+}
+
+.welcome-arrows .hint span {
+  animation: fade-up-plain var(--dur-2) var(--ease-out) var(--dur-2) both;
+}
+
+.welcome-arrows .hint:nth-child(2) :is(path, span) {
+  animation-delay: 60ms, 60ms;
+}
+
+.welcome-arrows .hint:nth-child(2) span {
+  animation-delay: calc(var(--dur-2) + 60ms);
+}
+
+.welcome-arrows .hint:nth-child(3) path {
+  animation-delay: 120ms;
+}
+
+.welcome-arrows .hint:nth-child(3) span {
+  animation-delay: calc(var(--dur-2) + 120ms);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes grow-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes fade-up-plain {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The mode pill sliding between Simple task and Stages (Toolbar). */
+.toolbar-group--modes {
+  position: relative;
+}
+
+.mode-pill {
+  position: absolute;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.tool-icon-swap {
+  display: inline-flex;
+  flex: none;
+}
+
+/* Reduced motion: lines that draw themselves are simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-arrows .hint path,
+  .tool-primary[data-copied] .tool-icon-swap path {
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* Switching tabs: the empty island that carries the right-hand panel to its new place. */
+.panel-morph {
+  position: fixed;
+  z-index: var(--z-island);
+  padding: 0;
+  pointer-events: none;
+}

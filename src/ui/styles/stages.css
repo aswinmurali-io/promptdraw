@@ -1,0 +1,928 @@
+/*
+ * Stage editor: an infinite, pannable canvas that fills the viewport behind the islands.
+ * Content is drawn in light canvas colours and inverted for dark mode (--canvas-filter),
+ * like a whiteboard document; the dot grid moves and scales with the view.
+ */
+
+.app[data-mode="stages"] .canvas {
+  padding: 0;
+  overflow: hidden;
+  background-image: none;
+}
+
+.stages-mount {
+  position: absolute;
+  inset: 0;
+}
+
+.stage-surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  outline: none;
+  touch-action: none;
+  background-color: var(--canvas-bg);
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+}
+
+/* Keyboard focus only: a click on the canvas focuses it too, and must not frame the viewport. */
+.stage-surface:focus-visible:not([data-pointer]) {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+
+/* Empty canvas pans on drag (cards keep the pointer); with Space held everything pans. */
+.stage-surface,
+.stage-surface[data-space] * {
+  cursor: grab;
+}
+
+.stage-surface[data-panning],
+.stage-surface[data-panning] * {
+  cursor: grabbing !important;
+}
+
+.stage-surface[data-dragging],
+.stage-surface[data-dragging] * {
+  cursor: move !important;
+}
+
+.stage-svg {
+  display: block;
+  overflow: visible;
+  filter: var(--canvas-filter);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sk-card,
+.sk-frame,
+.sk-plus,
+.sk-tile,
+.sk-tick,
+.sk-del,
+.sk-addcancel {
+  cursor: pointer;
+}
+
+/* Card controls: a soft chip behind each on hover (canvas colours stay light; dark mode
+   inverts the canvas layer). */
+.sk-ctl-bg {
+  fill: transparent;
+  transition: fill var(--duration-fast) var(--ease);
+}
+
+/* The Group pill reads as a control at rest (a hairline), filled on hover. */
+.sk-tick-bg {
+  stroke: #dcdbe8;
+  stroke-width: 1;
+}
+
+.sk-tick:hover .sk-ctl-bg {
+  fill: #ecebff;
+  stroke: #b9b5f5;
+}
+
+.sk-del:hover .sk-ctl-bg {
+  fill: #ffecec;
+}
+
+.sk-del:hover path {
+  stroke: #c92a2a;
+}
+
+.sk-plus:hover > circle,
+.sk-tile:hover > path:first-of-type {
+  fill: #ecebff;
+}
+
+/* A card's controls (tick, grip, ×) wait until they are wanted: on hover, on the focused card,
+   on a ticked card, and every tick box while any card is ticked (grouping is under way).
+   Hidden controls take no clicks, so a tap there focuses the card instead. */
+.sk-card .sk-tick,
+.sk-card .sk-del {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.sk-card:hover :is(.sk-tick, .sk-del),
+.sk-card[data-focused] :is(.sk-tick, .sk-del),
+.sk-card[data-selected] .sk-tick,
+.stage-svg[data-ticking] .sk-tick {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* "N more stages →": the flow runs on past the free area's edge (a long flow, or one under an
+   open panel). It sits on the flow's row at that edge and pages the board toward the rest. */
+.flow-more {
+  position: absolute;
+  z-index: var(--z-canvas-overlay);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--border));
+  border-radius: 999px;
+  background: var(--island-bg);
+  box-shadow: var(--shadow-island);
+  color: var(--color-primary-darkest);
+  font: inherit;
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translate(0, -50%);
+}
+
+.flow-more[data-side="right"] {
+  transform: translate(-100%, -50%);
+}
+
+.flow-more:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--island-bg));
+}
+
+.flow-more:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.stage-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--island-inset) + 0.35rem);
+  z-index: var(--z-canvas-overlay);
+  width: max-content;
+  max-width: min(34rem, calc(100% - 28rem));
+  margin: 0;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-family: var(--font-hint);
+  font-size: 1.1rem;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+  transition: opacity 240ms ease-out;
+}
+
+.stage-hint[data-quiet] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-hint {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .stage-hint {
+    display: none;
+  }
+}
+
+/* ---- stage bar: the stage tools at the foot of the canvas --------------- */
+
+/* Wide screens: one toolbar row on top on both tabs (the Prompt panel never jumps), the stage
+   tools centred at the bottom between the zoom row and Help, the status line just above them.
+   At mid widths the left column stacks Menu, the workflow island and Settings, so left panels
+   start one row lower (wider and on phones the first two join); the inspector docks on the right. */
+.region--stage-bar {
+  bottom: var(--island-inset);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.app[data-mode="stages"] {
+  --top-h-left: calc((var(--button-lg) + var(--island-padding) * 2) * 2 + var(--space) * 2);
+  --stage-bar-h: calc(var(--button-lg) + var(--island-padding) * 2);
+}
+
+@media (min-width: 731px) {
+  .app[data-mode="stages"] .props-panel {
+    top: calc(var(--island-inset) * 2 + var(--top-h-left));
+  }
+
+  .app[data-mode="stages"] .props-panel.settings-panel {
+    max-height: calc(100% - var(--island-inset) * 4 - var(--top-h-left) - var(--button-lg) - 0.5rem);
+  }
+
+  .stage-hint {
+    bottom: calc(var(--island-inset) * 1.5 + var(--stage-bar-h));
+  }
+}
+
+.stage-bar {
+  gap: 2px;
+}
+
+/* Mid widths: one Add ▾ menu instead of the three direct tools and More, so the bar stays
+   clear of the zoom row and Help. */
+@media (min-width: 731px) and (max-width: 1180px) {
+  .stage-bar .stage-direct {
+    display: none;
+  }
+
+  .stage-bar .stage-add {
+    display: inline-flex;
+  }
+}
+
+/* The workflow island: name, File ▾ and status, under the menu (joined to it where it fits). */
+.app[data-mode="stages"] .region--top-left {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--space) * 2);
+}
+
+.workflow-island {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stage-name .field {
+  width: 8.5rem;
+  height: 2rem;
+  margin-right: 2px;
+}
+
+.stage-caret {
+  margin-left: -0.2rem;
+  color: var(--text-muted);
+}
+
+.stage-status {
+  min-width: 0;
+  max-width: 14rem;
+  margin: 0 0.35rem 0 0.15rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-status[data-empty] {
+  display: none;
+}
+
+/* Unsaved: a soft accent chip, so it reads as a state rather than a warning. */
+.stage-status[data-dirty] {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-darkest);
+}
+
+/* Narrow desktop: a shorter name field keeps the island clear of the stage bar. */
+@media (max-width: 1240px) {
+  .stage-name .field {
+    width: 6.5rem;
+  }
+}
+
+/* Tablet widths: the panels float over the canvas and the bottom row is short of room, so the
+   stage bar goes back under the toolbar at the right edge and the panels start below both. */
+@media (min-width: 731px) and (max-width: 960px) {
+  .app[data-mode="stages"] {
+    --top-h: calc((var(--button-lg) + var(--island-padding) * 2) * 2 + var(--space) * 2);
+  }
+
+  .app[data-mode="stages"] .region--top-center {
+    left: auto;
+    right: var(--island-inset);
+    transform: none;
+  }
+
+  .region--stage-bar {
+    top: calc(var(--island-inset) + var(--button-lg) + var(--island-padding) * 2 + var(--space) * 2);
+    bottom: auto;
+    left: auto;
+    right: var(--island-inset);
+    transform: none;
+  }
+
+  .stage-name .field {
+    width: 5.5rem;
+  }
+
+  .stage-bar .tool-btn {
+    padding: 0 0.4rem;
+  }
+}
+
+@media (max-width: 730px) {
+  .app[data-mode="stages"] .region--top-left {
+    flex-direction: row;
+    align-items: stretch;
+    right: var(--island-inset);
+  }
+
+  .workflow-island {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .stage-name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .stage-name .field {
+    width: 100%;
+    min-width: 5rem;
+  }
+
+  /* Only the dot says "unsaved" here; a flash still shows in full. */
+  .stage-status[data-dirty] {
+    padding: 0;
+    background: none;
+  }
+
+  .stage-status[data-dirty] .stage-status-text {
+    display: inline-block;
+    width: 0.6rem;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+
+  /* Phones: the stage bar is a row of its own just above the tab bar. */
+  .region--stage-bar {
+    bottom: calc(var(--island-inset) + 3rem + var(--space) * 2);
+    left: var(--island-inset);
+    right: var(--island-inset);
+    transform: none;
+    z-index: var(--z-sheet-bar);
+  }
+
+  /* Phones: one Add ▾ menu, Loop and Parallel, each with its word under the icon like the
+     tab bar below it. */
+  .stage-bar {
+    justify-content: space-around;
+    width: 100%;
+  }
+
+  .stage-bar .stage-direct {
+    display: none;
+  }
+
+  .stage-bar .stage-add,
+  .stage-bar .tool-btn.stage-fit {
+    display: inline-flex;
+  }
+
+  .stage-bar .toolbar-divider.stage-fit {
+    display: block;
+  }
+
+  .stage-bar .tool-btn {
+    flex: 1 1 0;
+  }
+
+  .toolbar.stage-bar .tool-label {
+    display: inline;
+  }
+
+  .stage-bar .stage-caret {
+    display: none;
+  }
+}
+
+/* One top-left island: where the row has room (wide screens, and phones where the toolbar is a
+   tab bar at the foot) the Menu button and the workflow island join into a single island,
+   Menu | name, File ▾, status, so the left column is one row. Mid widths keep them stacked:
+   there the row would run under the centred toolbar. */
+@media (min-width: 1320px), (max-width: 730px) {
+  .app[data-mode="stages"] {
+    --top-h-left: calc(var(--button-lg) + var(--island-padding) * 2);
+  }
+
+  .app[data-mode="stages"] .region--top-left {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    padding: var(--island-padding);
+    border: var(--island-border);
+    border-radius: var(--radius-lg);
+    background: var(--island-bg);
+    box-shadow: var(--shadow-island);
+    pointer-events: auto;
+  }
+
+  .app[data-mode="stages"] .region--top-left .tool-btn.menu-trigger {
+    height: var(--button-lg);
+    padding: 0 0.7rem 0 0.55rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .app[data-mode="stages"] .region--top-left .menu-trigger[aria-expanded="true"] {
+    background: var(--color-primary-light);
+  }
+
+  .app[data-mode="stages"] .workflow-island {
+    margin-left: var(--space);
+    padding: 0 0 0 var(--space);
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+
+  /* The open menu drops from the joined island's foot, not the button's. */
+  .app[data-mode="stages"] .region--top-left .menu {
+    top: calc(100% + var(--island-padding) + var(--space) * 2);
+    left: calc(var(--island-padding) * -1);
+  }
+}
+
+/* Wide screens: the joined island stops short of the centred toolbar (a fixed 688px wide), a
+   long status flash ellipsing, and "unsaved changes" is its dot until there is room for the
+   chip. Below 1400px the Menu button drops its word. */
+@media (min-width: 1320px) {
+  .app[data-mode="stages"] .region--top-left {
+    max-width: calc(50% - 23rem);
+  }
+
+  .app[data-mode="stages"] .workflow-island {
+    min-width: 0;
+  }
+
+  .app[data-mode="stages"] .stage-status {
+    flex: 0 1 auto;
+  }
+}
+
+@media (min-width: 1320px) and (max-width: 1399px) {
+  .app[data-mode="stages"] .region--top-left .menu-trigger .tool-label {
+    display: none;
+  }
+}
+
+@media (min-width: 1320px) and (max-width: 1639px) {
+  .app[data-mode="stages"] .stage-status[data-dirty] {
+    padding: 0;
+    background: none;
+  }
+
+  .app[data-mode="stages"] .stage-status[data-dirty] .stage-status-text {
+    display: inline-block;
+    width: 0.6rem;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+}
+
+/* A card being dragged fades in place while its ghost follows the pointer, and fades back in
+   when it is dropped. */
+.sk-card {
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+/* The empty workflow's handwritten nudge toward the Stage tool. */
+.stage-empty-hint {
+  position: fixed;
+  z-index: calc(var(--z-canvas-overlay) + 1);
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15rem;
+  color: var(--text-muted);
+  font-family: var(--font-hint);
+  font-size: 1.35rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stage-empty-hint[data-at="below"] {
+  align-items: flex-end;
+}
+
+/* Over a tool at the foot the arrow's tip sits right on the tool; the words ride up by its tail. */
+.stage-empty-hint[data-at="above"] {
+  align-items: flex-end;
+}
+
+.stage-empty-hint[data-at="note"] {
+  transform: translateX(-50%);
+}
+
+.stage-empty-hint svg {
+  flex: none;
+  color: var(--color-primary);
+}
+
+.stage-empty-hint small {
+  font-size: 1.05rem;
+}
+
+.stage-empty-hint[data-at="below"] span {
+  margin-top: 2.6rem;
+}
+
+.stage-empty-hint[data-at="above"] span {
+  margin-bottom: 2.6rem;
+}
+
+/* What the Goal and on-cancel cards are for, on an empty workflow: the same handwriting and
+   rough arrow as the first-stage hint, hung off the card's top (Goal) or foot (on cancel) in
+   board space. Above a card the note is lifted by its own height so the arrow tip meets the edge. */
+.stage-card-note {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  gap: 0.15rem;
+  color: var(--text-muted);
+  font-family: var(--font-hint);
+  font-size: 1.35rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stage-card-note[data-at="above"] {
+  align-items: flex-end;
+  transform: translateY(calc(-100% - 2px));
+}
+
+.stage-card-note[data-at="below"] {
+  align-items: flex-start;
+  transform: translateY(4px);
+}
+
+.stage-card-note svg {
+  flex: none;
+  color: var(--color-primary);
+}
+
+.stage-card-note[data-at="below"] svg {
+  color: var(--danger);
+}
+
+.stage-card-note small {
+  font-size: 1.05rem;
+}
+
+/* Phones: the words wrap rather than run off the side of the screen. */
+@media (max-width: 730px) {
+  .stage-card-note span {
+    width: 12rem;
+    white-space: normal;
+  }
+}
+
+.stage-card-note[data-at="above"] span {
+  margin-bottom: 2.6rem;
+}
+
+.stage-card-note[data-at="below"] span {
+  margin-top: 2.6rem;
+}
+
+/* A drag released without a move: the ghost glides back onto its card. */
+.sk-ghost[data-returning] {
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-ghost[data-returning] {
+    transition: none;
+  }
+}
+
+.sk-addcancel:hover > path {
+  fill: #ffecec;
+}
+
+/* Wide screens: a long flow runs on under the Prompt panel; a short fade from the canvas
+   colour at the panel's inner edge lets a card passing beneath read as "more this way"
+   rather than as cut off. */
+@media (min-width: 901px) {
+  .app[data-mode="stages"] .output-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: 2.5rem;
+    background: linear-gradient(to right, transparent, var(--canvas-bg) 85%);
+    pointer-events: none;
+  }
+
+  /* Cards passing under the panel stop at its inner edge: nothing of them shows again in the
+     narrow strip between the panel and the screen edge (the dot grid still does). */
+  .app[data-mode="stages"][data-output="open"] .stage-svg {
+    clip-path: inset(0 calc(var(--output-w) + var(--island-inset)) 0 0);
+  }
+}
+
+/* Dark mode inverts the light canvas colours, which turns the cancel lane's pink into a muddy
+   maroon with a heavy salmon glow. Its own dark tint instead: these are the light values whose
+   inversion (--canvas-filter) lands on a near-neutral #241a1c fill and a quiet #3a2226 halo,
+   so the red dashed border and red words carry the "destructive" meaning. */
+:root[data-theme="dark"] .sk-cancel-fill {
+  fill: #fbf0f2;
+}
+
+:root[data-theme="dark"] .sk-cancel-halo {
+  fill: #fce0e4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sk-cancel-fill {
+    fill: #fbf0f2;
+  }
+
+  :root:not([data-theme="light"]) .sk-cancel-halo {
+    fill: #fce0e4;
+  }
+}
+
+/* ---- Demo workflows (right edge, while it is free) ------------------------------------------ */
+.app[data-demos] {
+  --pad-r: calc(var(--demo-w) + var(--island-inset) * 3);
+}
+
+.app {
+  --demo-w: 17rem;
+}
+
+.demo-panel.island {
+  position: absolute;
+  z-index: var(--z-island);
+  top: calc(var(--island-inset) * 2 + var(--top-h));
+  right: var(--island-inset);
+  width: var(--demo-w);
+  max-height: calc(100% - var(--island-inset) * 4 - var(--top-h) - var(--button-lg) - var(--island-padding) * 2);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.demo-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.demo-sub {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+}
+
+.demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demo-card {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--island-bg);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out),
+    transform 80ms var(--ease-out);
+}
+
+.demo-card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.demo-card:active {
+  transform: scale(0.98);
+}
+
+.demo-name {
+  font-weight: 700;
+}
+
+.demo-hint {
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.demo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-primary-darker);
+  font-weight: 700;
+}
+
+/* Phones and narrow screens: the canvas needs the room; File ▾ → Templates still lists them. */
+@media (max-width: 900px) {
+  .demo-panel {
+    display: none;
+  }
+
+  .app[data-demos] {
+    --pad-r: calc(var(--island-inset) * 2);
+  }
+}
+
+/* ---- A/B prompt flags --------------------------------------------------- */
+
+/* The variant a flag does not choose: still on the board, dimmed. Strip mode would remove it
+   from the prompt, so it is fainter and struck through (the stroke is drawn in the card). */
+.sk-card[data-variant="off"] {
+  opacity: 0.55;
+}
+
+.sk-card[data-variant="off"][data-flag-mode="strip"] {
+  opacity: 0.4;
+}
+
+.sk-card[data-variant="off"]:hover,
+.sk-card[data-variant="off"][data-focused] {
+  opacity: 0.9;
+}
+
+/* The tags layer sits over the canvas; only the tags take the pointer. */
+.stage-tags {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sk-fork {
+  pointer-events: none;
+}
+
+.sk-fork .sk-lane {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.sk-fork .sk-lane:hover {
+  fill: #ffe8cc;
+}
+
+.sk-tag {
+  pointer-events: all;
+  cursor: pointer;
+  outline: none;
+}
+
+.sk-tag .sk-tag-ring {
+  stroke: var(--color-primary);
+  stroke-width: 2px;
+  opacity: 0;
+}
+
+.sk-tag:focus-visible .sk-tag-ring {
+  opacity: 1;
+}
+
+.sk-tag:hover .sk-tag-bg {
+  filter: brightness(0.94);
+}
+
+.sk-tag[data-on]:hover .sk-tag-bg {
+  filter: brightness(1.12);
+}
+
+.sk-tag:active {
+  transform: translateY(0.5px);
+}
+
+/* The stage bar's Flags popover: a small island above the bar (below it where the bar sits high). */
+.flags-pop {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-popover);
+  width: min(22rem, calc(100vw - 2 * var(--island-inset)));
+  max-height: min(24rem, 60vh);
+  overflow-y: auto;
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* Opened from a tag on the canvas: beside the press, not above the stage bar. */
+.flags-pop--at {
+  position: fixed;
+  bottom: auto;
+  left: 0;
+  transform: none;
+  width: min(22rem, calc(100vw - 1rem));
+}
+
+.flags-pop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.flags-pop-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.flags-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flags-row .check {
+  font-weight: 600;
+}
+
+.flags-name {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+}
+
+.flags-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.flags-letters {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.stage-flags[data-active] {
+  color: var(--color-primary-darker);
+}
+
+.insp-flag {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.insp-flag:first-of-type {
+  border-top: 0;
+}
+
+.insp-flag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.insp-when-error {
+  margin: 0.25rem 0 0;
+  color: var(--danger, #c92a2a);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 730px) {
+  /* The bar is docked at the foot on phones: the popover rises from it, full width. */
+  .flags-pop {
+    left: var(--island-inset);
+    right: var(--island-inset);
+    transform: none;
+    width: auto;
+  }
+}

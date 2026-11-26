@@ -158,6 +158,10 @@ A stage with `promt:` parses cleanly but fails the round trip, and the report na
 
 A check link opens on Stages with the banner, no intro video, a PASS report, and the fragment kept for a re-check.
 
+### Check mode shows no welcome
+
+A check link that fails to load leaves the page on the Task tab, where the welcome card and arrows still stay hidden, so an agent reads only the report.
+
 ### Broken workflow links change nothing
 
 A payload that isn't base64url reports "Couldn't load workflow from link:" and leaves the app on its old config.

@@ -157,7 +157,7 @@ export function App() {
   useEffect(() => {
     if (hasTask) patchPrefs((p) => (p.welcomeDismissed ? {} : { welcomeDismissed: true }));
   }, [hasTask, patchPrefs]);
-  const welcome = !prefs.welcomeDismissed && cfg.tab === "task" && !hasTask;
+  const welcome = !isCheckMode() && !prefs.welcomeDismissed && cfg.tab === "task" && !hasTask;
 
   // Compile from a deferred copy so typing stays responsive on big workflows; React catches
   // the prompt up as soon as the input is idle.

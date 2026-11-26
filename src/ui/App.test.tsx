@@ -895,5 +895,7 @@ describe("check mode", () => {
     const report = await screen.findByRole("region", { name: "Workflow check" });
     await waitFor(() => expect(report).toHaveTextContent("Couldn't load workflow:"));
     expect(report).toHaveTextContent("Workflow check: FAIL");
+    // @lat: [[ui#Tests#Check mode shows no welcome]]
+    expect(document.querySelector(".welcome-card")).toBeNull();
   });
 });

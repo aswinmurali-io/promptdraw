@@ -17,6 +17,7 @@
 [What it is](#-what-it-is) ·
 [How it works](#-how-it-works) ·
 [Features](#-features) ·
+[AI agents](#-let-your-ai-agent-draw-it) ·
 [Shortcuts](#-keyboard-shortcuts) ·
 [Run it](#-run-it)
 
@@ -43,6 +44,7 @@ cancel. The prompt updates live as you draw.
 | 🔒 **Private** | No server, no account, no telemetry. Your work lives in your browser. |
 | ⚡ **Live** | Every edit shows up in the prompt straight away, with gaps flagged. |
 | ⌨️ **Keyboard first** | A command palette and a shortcut for nearly everything. |
+| 🤖 **Agent ready** | A Claude Code skill writes workflows for you and hands back a link that opens them here. |
 | 📱 **Anywhere** | Floating panels on laptops, a tab bar and pull-up sheet on phones, and a Windows desktop app. |
 
 ## 🧭 How it works
@@ -136,6 +138,42 @@ For bigger jobs: an infinite canvas for drawing a multi-step agent workflow.
 - ♿ **Accessible.** Focus-trapped dialogs, screen-reader labels on the board and reduced
   motion respected throughout.
 
+## 🤖 Let your AI agent draw it
+
+Describe a process to Claude Code and get back a finished workflow: stages, functions, loops
+and parallel branches, checked against the app and ready to open on the canvas. The
+[`promptdraw` skill](plugins/promptdraw/skills/promptdraw/SKILL.md) works in any project,
+with no promptdraw checkout. In the app, the **AI agent** button (bottom right, or
+*Menu → Use with an AI agent*) shows the same steps.
+
+1. **Install the skill** in Claude Code:
+
+   ```text
+   /plugin marketplace add aswinmurali-io/promptdraw
+   /plugin install promptdraw@promptdraw
+   ```
+
+   Other agents that read skills: copy
+   [`plugins/promptdraw/skills/promptdraw/`](plugins/promptdraw/skills/promptdraw/) into
+   their skills folder (for Claude Code without plugins, `~/.claude/skills/promptdraw/`).
+2. **Ask for a workflow**, for example: *"Make a promptdraw workflow that fixes the flaky
+   checkout test, with a loop until it passes 20 runs in a row."*
+3. **Open what it hands back:** a `.yaml` file and an **Open in promptdraw** link. The link
+   opens the workflow on the Stages tab (it asks first if you have unsaved stage edits); the
+   file opens with **Open…** or a drop.
+
+How it stays honest and private:
+
+- **Checked before you see it.** With a browser tool, the agent first opens a check link
+  (ending in `&check`). Check mode loads the workflow on in-memory storage, so it never reads
+  or saves your work, and prints a *Workflow check: PASS/FAIL* report with load warnings and
+  any line the app would rewrite (a misspelled key, say). The agent fixes the file until it
+  passes.
+- **No server.** The workflow travels compressed in the link's `#` fragment, which browsers
+  never send to a server.
+- **Never stale.** The skill's reference of allowed values and its example are generated from
+  the app's source (`npm run skill:ref`), and a test fails if they drift.
+
 ## ⌨️ Keyboard shortcuts
 
 Press `?` in the app for the full list. The essentials:
@@ -188,18 +226,7 @@ save your settings as JSON and your workflows as YAML, then open them on the oth
 
 Working on promptdraw itself? `CLAUDE.md` and `lat.md/` hold the conventions and design notes.
 
-Want an AI agent to write workflows for you? The [`promptdraw` skill](plugins/promptdraw/skills/promptdraw/SKILL.md)
-teaches Claude Code, in any project, to write Stages-tab YAML, check it in the app and hand
-you the file plus a link that opens it. Install it in Claude Code:
-
-```text
-/plugin marketplace add aswinmurali-io/promptdraw
-/plugin install promptdraw@promptdraw
-```
-
-Or copy `plugins/promptdraw/skills/promptdraw/` to `~/.claude/skills/promptdraw/`. The link
-carries the workflow in its `#` fragment, so it never reaches a server; a link ending in
-`&check` opens a check mode that reports problems and saves nothing.
+Want an AI agent to write workflows for you? See [Let your AI agent draw it](#-let-your-ai-agent-draw-it).
 
 ## 🙏 Credits
 

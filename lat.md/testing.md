@@ -6,9 +6,19 @@ Configuration lives in the `test` block of [[vite.config.ts]]; [[src/test/setup.
 
 ## Workflow authoring tool
 
-[[scripts/workflow-tool.ts]] is a developer and AI helper for writing workflow YAML by hand; it reads the live core, so it never goes stale.
+[[scripts/workflow-tool.ts]] is a contributor helper for writing workflow YAML by hand; the `promptdraw` skill plugin lets agents in any project do the same without this repo.
 
-Run with `npx vite-node scripts/workflow-tool.ts`: `constants` prints allowed values, defaults, templates and toggles; `starters` and `example <key>` show the built-in workflows as YAML; `validate <file>` reports parse warnings and whether the file survives a round trip; `prompt <file>` prints the compiled prompt. The `promptdraw` skill, committed at `.claude/skills/promptdraw/SKILL.md`, drives it so agents in a clone can write workflows without the UI.
+Run with `npx vite-node scripts/workflow-tool.ts`: `constants` prints allowed values, defaults, templates and toggles; `starters` and `example <key>` show the built-in workflows as YAML; `validate <file>` reports parse warnings and whether the file survives a round trip; `prompt <file>` prints the compiled prompt; `link <file>` prints the open and check links ([[ui#App shell#Workflow links]]).
+
+The skill ships as a Claude Code plugin: `.claude-plugin/marketplace.json` lists `plugins/promptdraw`, whose `skills/promptdraw/` holds `SKILL.md` (write, make links, open the check link in a browser until it passes, hand off the file and the open link), the generated `reference.md` and `example.yaml`, and a dependency-free `link.mjs`. [[scripts/skillReference.ts#renderReference]] and [[scripts/skillReference.ts#renderExample]] render the generated files from `src/core` and the starters; `npm run skill:ref` ([[scripts/skill-ref.ts]]) writes them.
+
+### Skill files match the app
+
+`reference.md` and `example.yaml` equal what the generators produce from today's core, and the example loads with no warnings, so the skill can't drift from the parser.
+
+### Skill links open in the app
+
+`link.mjs` links decode with the app's own decoder back to the exact file, Unicode included, end with `&check` for the check link, and honour `--base`.
 
 ## Ported unit tests
 

@@ -1,0 +1,95 @@
+# Stage workflow — Prompt Builder
+name: sprint-chaser
+version: 1
+goal: "Burn down this sprint: ship as many backlog tickets as the time box allows, highest value first, each one meeting every acceptance criterion with passing tests and its own commit."
+commit: atomic
+cancel_grace_minutes: 5
+on_cancel:
+  - name: Park work in progress
+    prompt: "Commit the ticket in flight to a `wip/<ticket>` branch with a message saying where it stopped. Leave no uncommitted changes and don't touch tickets already shipped."
+  - name: Write the hand-off
+    prompt: "Append to `sprint-report.md`: tickets shipped (with commit hashes), the ticket in flight and its `wip/` branch, and the `burn_down` score at the moment of cancel."
+    model: haiku
+blocks:
+  - id: b1
+    type: intentions
+    toggles: [assumptions, high_confidence, progress, tests, review]
+    worker_model: sonnet
+    recon_model: opus
+    spec_only: false
+    inline_review: false
+    inline_critique: false
+    progress_minutes: 20
+    progress_format: output
+    mock_count: 3
+    mock_hint: false
+    mock_strength: 30
+  - id: b2
+    type: function
+    name: Ticket check
+    params: [ticket]
+    text: "For {{ticket}}: re-read its acceptance criteria, run the tests that cover it, and list every criterion as ✅ met or ❌ not met, with the test or command output that proves it. `criteria_met` is the share of criteria met, as a percentage."
+  - id: b3
+    type: function
+    name: Ship gate
+    params: [scope]
+    text: "Before calling {{scope}} done: lint, type check and the full test suite pass; the diff has no debug output, commented-out code or new TODOs; the commit message follows Conventional Commits and names the ticket."
+  - id: b4
+    type: stage
+    name: Pull the backlog
+    prompt: "Find the sprint backlog (`SPRINT.md`, the issue tracker, or ask me for it). List every ticket with its id, title, acceptance criteria and story points (estimate S = 1, M = 3, L = 5 when missing). Flag any ticket whose criteria are vague and propose a sharper wording."
+    model: sonnet
+    read_only: true
+  - id: b5
+    type: stage
+    name: Plan the burn-down
+    prompt: "Order the tickets by value ÷ points, keeping dependencies before the tickets that need them. Write the order to `sprint-plan.md`, one checkbox per ticket with its points, and the total points planned."
+    model: opus
+  - id: b6
+    type: prompt
+    text: "A ticket that is still blocked after its fix loop gives up goes to the bottom of `sprint-plan.md` with a one-line reason. Don't spend a third pass on it."
+  - id: b7
+    type: stage
+    name: Pick the next ticket
+    prompt: "Take the top unchecked ticket in `sprint-plan.md`, restate its acceptance criteria and name the files it will touch."
+  - id: b8
+    type: stage
+    name: Build it
+    prompt: Implement the ticket with the smallest change that meets every criterion. Match the code around it.
+  - id: b9
+    type: stage
+    name: Write the tests
+    prompt: "From the acceptance criteria alone, write tests that fail without the change: one per criterion, plus the edge cases they imply."
+    model: sonnet
+  - id: b10
+    type: stage
+    name: Verify and ship
+    prompt: "[[Ticket check: ticket = the current ticket]] Fix whatever is not met. Once every criterion passes, [[Ship gate: scope = this ticket]] then commit and tick it in `sprint-plan.md`."
+  - id: b11
+    type: stage
+    name: Sprint report
+    prompt: "Write `sprint-report.md`: each shipped ticket with its commit, the final `burn_down`, the tickets carried over and why, and one line on what slowed the sprint down most."
+    model: haiku
+parallels:
+  - id: p1
+    blocks: [b8, b9]
+    join: all
+loops:
+  - id: l1
+    blocks: [b6, b7, b8, b9, b10]
+    agentic: true
+    mode: reward
+    count: 3
+    reward: "`burn_down` = 100 × (points of tickets that are ticked and pass Ticket check) ÷ (total points planned). A ticked ticket that fails any criterion counts 0, so shipping broken work lowers the score."
+    metric: burn_down
+    target: 90
+    max_passes: 12
+  - id: l2
+    blocks: [b8, b9, b10]
+    agentic: true
+    mode: reward
+    count: 3
+    reward: "`criteria_met` from Ticket check on the current ticket: the share of its acceptance criteria that pass, as a percentage."
+    metric: criteria_met
+    target: 100
+    max_passes: 3

@@ -5,6 +5,7 @@
 //   npx vite-node scripts/workflow-tool.ts example <key>      print a starter as YAML (the format to copy)
 //   npx vite-node scripts/workflow-tool.ts validate <file>    parse a workflow file: warnings, round-trip diff
 //   npx vite-node scripts/workflow-tool.ts prompt <file>      print the `## Workflow` prompt it compiles to
+//   npx vite-node scripts/workflow-tool.ts link <file>        print the open and check links (as the skill's link.mjs)
 import { readFileSync } from "node:fs";
 import {
   JOINS,
@@ -21,6 +22,8 @@ import {
   YamlError,
 } from "../src/core";
 import { STARTERS } from "../src/ui/stages/starters";
+// @ts-expect-error -- the skill's dependency-free .mjs, outside the TS project
+import { makeLinks } from "../plugins/promptdraw/skills/promptdraw/link.mjs";
 
 const [cmd, arg] = process.argv.slice(2);
 
@@ -53,8 +56,11 @@ try {
     process.exitCode = warnings.length ? 1 : 0;
   } else if (cmd === "prompt") {
     console.log(workflowPrompt(load(arg)[0]));
+  } else if (cmd === "link") {
+    const links = makeLinks(load(arg)[2]);
+    console.log(`open: ${links.open}\ncheck: ${links.check}\nlength: ${links.length}`);
   } else {
-    console.log("usage: constants | starters | example <key> | validate <file> | prompt <file>");
+    console.log("usage: constants | starters | example <key> | validate <file> | prompt <file> | link <file>");
     process.exitCode = 2;
   }
 } catch (e) {

@@ -4,10 +4,7 @@ dist
 *.tsbuildinfo
 .DS_Store
 coverage
-.claude/*
-!.claude/skills/
-.claude/skills/*
-!.claude/skills/promptdraw/
+.claude
 .mcp.json
 test-results
 playwright-report

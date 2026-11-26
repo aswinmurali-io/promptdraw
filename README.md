@@ -188,9 +188,18 @@ save your settings as JSON and your workflows as YAML, then open them on the oth
 
 Working on promptdraw itself? `CLAUDE.md` and `lat.md/` hold the conventions and design notes.
 
-Want an AI agent to write workflows for you? The [`promptdraw` skill](.claude/skills/promptdraw/SKILL.md)
-teaches Claude Code (and other agents that read skills) to write and validate Stages-tab YAML
-directly, then open it in the app.
+Want an AI agent to write workflows for you? The [`promptdraw` skill](plugins/promptdraw/skills/promptdraw/SKILL.md)
+teaches Claude Code, in any project, to write Stages-tab YAML, check it in the app and hand
+you the file plus a link that opens it. Install it in Claude Code:
+
+```text
+/plugin marketplace add aswinmurali-io/promptdraw
+/plugin install promptdraw@promptdraw
+```
+
+Or copy `plugins/promptdraw/skills/promptdraw/` to `~/.claude/skills/promptdraw/`. The link
+carries the workflow in its `#` fragment, so it never reaches a server; a link ending in
+`&check` opens a check mode that reports problems and saves nothing.
 
 ## 🙏 Credits
 

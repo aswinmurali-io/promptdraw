@@ -1,0 +1,11 @@
+{
+  "name": "promptdraw",
+  "owner": { "name": "aswinmurali-io" },
+  "plugins": [
+    {
+      "name": "promptdraw",
+      "source": "./plugins/promptdraw",
+      "description": "Write, check and hand off promptdraw workflows"
+    }
+  ]
+}

@@ -308,8 +308,9 @@
   background: color-mix(in srgb, var(--work-open-bg) 88%, #000);
 }
 
-/* Solo islands that carry a label: the main menu (top-left) and help (bottom-right). */
+/* Solo islands that carry a label: the main menu (top-left), and AI agent and help (bottom-right). */
 .tool-btn.menu-trigger,
+.tool-btn.agent-trigger,
 .tool-btn.help-trigger,
 .tool-btn.work-open {
   height: calc(var(--button-lg) + var(--island-padding) * 2);
@@ -321,6 +322,14 @@
 .menu-trigger[aria-expanded="true"] {
   background: var(--color-primary-light);
   color: var(--color-primary-darkest);
+}
+
+.agent-trigger::after {
+  left: auto;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 8px);
+  transform: none;
 }
 
 .help-trigger::after {

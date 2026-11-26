@@ -75,6 +75,8 @@ export interface ActionContext {
   zoom?: { in: () => void; out: () => void; reset: () => void; value: number; min?: number; max?: number; fit?: () => void };
   showWelcome?: () => void;
   openIntro?: () => void;
+  /** Use with an AI agent: the skill install dialog. */
+  openAgent?: () => void;
   /** Stage editor commands; present only on the Stages tab. */
   stages?: StageActions;
 }
@@ -158,6 +160,7 @@ export function buildActions(c: ActionContext): AppAction[] {
     list.push({ id: "panel.work", label: "How to work panel", short: "How to work", hint: "Show or hide the How to work options", category: "Panels", icon: "toggle", checked: !!c.showWork, keywords: ["options", "toggles", "intentions", "show", "hide", "close"], perform: c.toggleWork });
   if (c.stages) list.push(...stageActions(c.stages));
   if (c.showWelcome) list.push({ id: "help.welcome", label: "Show welcome hints", category: "Help", icon: "help", keywords: ["intro", "tour"], perform: c.showWelcome });
+  if (c.openAgent) list.push({ id: "help.agent", label: "Use with an AI agent", hint: "Install the promptdraw skill so Claude Code draws workflows for you", category: "Help", icon: "agent", keywords: ["ai", "agent", "claude", "skill", "plugin", "link", "automate"], perform: c.openAgent });
   if (c.openIntro) list.push({ id: "help.intro", label: "Watch the intro video", category: "Help", icon: "play", keywords: ["video", "tour", "demo", "intro", "tutorial"], perform: c.openIntro });
   for (const key of TOGGLE_ORDER) {
     const on = c.cfg.toggles[key];

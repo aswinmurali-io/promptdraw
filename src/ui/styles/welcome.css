@@ -206,9 +206,11 @@
 }
 
 /* Beside the Help island on the bottom row (above it the Prompt panel would cover it). */
+/* Help sits left of the AI agent button (about 5.8rem plus the region gap). */
 .hint--help {
+  --agent-w: calc(5.8rem + var(--space));
   bottom: calc(var(--island-inset) + 0.35rem);
-  right: calc(var(--island-inset) + 5.25rem);
+  right: calc(var(--island-inset) + var(--agent-w) + 5.25rem);
   align-items: center;
 }
 
@@ -233,5 +235,5 @@
 }
 
 .app[data-work="open"] .hint--help {
-  right: calc(var(--work-w) + var(--island-inset) + 5.25rem);
+  right: calc(var(--work-w) + var(--island-inset) + var(--agent-w) + 5.25rem);
 }

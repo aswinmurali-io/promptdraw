@@ -33,6 +33,7 @@ import { decodePayload, LinkError, parseLinkHash } from "./lib/link";
 import { checkWorkflow, type CheckResult } from "./lib/check";
 import { isCheckMode } from "./state/checkMode";
 import { CheckReport } from "./components/CheckReport";
+import { AgentDialog } from "./components/AgentDialog";
 
 /** The name a workflow link loads under (YAML, so it opens as a workflow). */
 const LINK_FILE = "link.yaml";
@@ -60,6 +61,7 @@ type DialogState =
   | null
   | { kind: "shortcuts" }
   | { kind: "intro" }
+  | { kind: "agent" }
   | { kind: "palette" }
   | { kind: "reset" }
   | { kind: "warnings"; title: string; items: string[] }
@@ -431,6 +433,7 @@ export function App() {
     openShortcuts: () => setDialog({ kind: "shortcuts" }),
     openPalette: () => setDialog({ kind: "palette" }),
     openIntro: () => setDialog({ kind: "intro" }),
+    openAgent: () => setDialog({ kind: "agent" }),
     showWelcome: () => {
       patchPrefs({ welcomeDismissed: false });
       set({ tab: "task" });
@@ -704,6 +707,10 @@ export function App() {
           <Icon name="help" />
           <span className="tool-label">Help</span>
         </button>
+        <button type="button" className="tool-btn agent-trigger island" aria-label="Use with an AI agent" data-tooltip={"Use with an AI agent\nLet Claude Code draw workflows for you"} onClick={() => setDialog({ kind: "agent" })}>
+          <Icon name="agent" />
+          <span className="tool-label">AI agent</span>
+        </button>
       </div>
 
       <input
@@ -722,6 +729,7 @@ export function App() {
 
       {dialog?.kind === "palette" && <CommandPalette actions={actions} onClose={() => setDialog(null)} />}
       {dialog?.kind === "shortcuts" && <ShortcutsDialog actions={actions} onClose={() => setDialog(null)} />}
+      {dialog?.kind === "agent" && <AgentDialog onClose={() => setDialog(null)} />}
       {dialog?.kind === "intro" && (
         <IntroDialog
           onClose={() => {

@@ -899,3 +899,25 @@ describe("check mode", () => {
     expect(document.querySelector(".welcome-card")).toBeNull();
   });
 });
+
+describe("use with an AI agent", () => {
+  // @lat: [[ui#Tests#Use with an AI agent]]
+  it("opens the agent dialog from the bottom button and copies the install commands", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Use with an AI agent/ }));
+    const dlg = screen.getByRole("dialog", { name: "Use with an AI agent" });
+    expect(dlg).toHaveTextContent("/plugin marketplace add aswinmurali-io/promptdraw");
+    expect(dlg).toHaveTextContent("/plugin install promptdraw@promptdraw");
+    await act(async () => {
+      fireEvent.click(within(dlg).getByRole("button", { name: "Copy the install commands" }));
+    });
+    expect(writeText).toHaveBeenCalledWith("/plugin marketplace add aswinmurali-io/promptdraw\n/plugin install promptdraw@promptdraw");
+  });
+
+  it("is in the main menu", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Main menu" }));
+    fireEvent.click(within(screen.getByRole("menu", { name: "Main menu" })).getByRole("menuitem", { name: /Use with an AI agent/ }));
+    expect(screen.getByRole("dialog", { name: "Use with an AI agent" })).toBeInTheDocument();
+  });
+});

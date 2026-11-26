@@ -9,7 +9,7 @@ import "../styles/menu.css";
 
 const GROUPS: string[][] = [
   ["file.open", "file.saveConfig", "file.exportWorkflow", "file.exportPrompt"],
-  ["help.palette", "help.shortcuts", "help.welcome", "help.intro", "help.star"],
+  ["help.palette", "help.shortcuts", "help.welcome", "help.intro", "help.agent", "help.star"],
   ["file.reset"],
 ];
 const THEMES = ["view.theme.light", "view.theme.dark", "view.theme.auto"];

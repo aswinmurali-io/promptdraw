@@ -144,3 +144,56 @@
   background: var(--surface-mid);
   object-fit: contain;
 }
+
+/* ---- Use with an AI agent --------------------------------------------- */
+
+.agent-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 3);
+}
+
+.agent-lead,
+.agent-note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.agent-note {
+  font-size: var(--text-small);
+}
+
+.agent-steps {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 3);
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.agent-step-title {
+  display: block;
+  font-weight: 600;
+}
+
+.agent-step-text {
+  color: var(--text-muted);
+}
+
+.agent-code {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space);
+  margin-top: calc(var(--space) * 1.5);
+  padding: calc(var(--space) * 2) calc(var(--space) * 3);
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+}
+
+.agent-code pre {
+  flex: 1;
+  margin: 0;
+  font: 500 var(--text-small) / 1.6 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

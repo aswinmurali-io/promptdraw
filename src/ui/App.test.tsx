@@ -6,6 +6,7 @@ import { App } from "./App";
 import { INTENT_GROUPS } from "./lib/intentGroups";
 import { encodePayload } from "./lib/link";
 import { starterWorkflow } from "./stages/starters";
+import { initCheckMode } from "./state/checkMode";
 
 /** On the Simple task tab the Prompt panel shares the right edge with How to work: ask for it. */
 function showPrompt(): void {
@@ -857,5 +858,42 @@ describe("workflow links", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/^Couldn't load workflow from link:/));
     expect(screen.getByRole("main", { name: "Task prompt canvas" })).toBeInTheDocument();
     expect(location.hash).toBe("");
+  });
+});
+
+describe("check mode", () => {
+  let original: Storage;
+  beforeEach(() => {
+    original = window.localStorage;
+  });
+  afterEach(() => {
+    Object.defineProperty(window, "localStorage", { value: original, configurable: true });
+    Object.defineProperty(globalThis, "localStorage", { value: original, configurable: true });
+    initCheckMode("");
+    history.replaceState(null, "", location.pathname);
+  });
+
+  // @lat: [[ui#Tests#Check mode reports on the workflow]]
+  it("loads a check link onto Stages and reports PASS without the intro", async () => {
+    localStorage.removeItem("promptdraw:intro");
+    const link = "#wf=" + (await encodePayload(toYaml(new Workflow(starterWorkflow("sprint-chaser")!)))) + "&check";
+    history.replaceState(null, "", location.pathname + link);
+    initCheckMode(location.hash);
+    render(<App />);
+    const report = await screen.findByRole("region", { name: "Workflow check" });
+    await waitFor(() => expect(report).toHaveTextContent("Workflow check: PASS"));
+    expect(screen.getByText("Check mode: nothing is saved")).toBeInTheDocument();
+    expect(screen.getByRole("main", { name: "Stages canvas" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /promptdraw in 30 seconds/i })).toBeNull();
+    expect(location.hash).toBe(link);
+  });
+
+  it("reports a broken check link", async () => {
+    history.replaceState(null, "", location.pathname + "#wf=!!!&check");
+    initCheckMode(location.hash);
+    render(<App />);
+    const report = await screen.findByRole("region", { name: "Workflow check" });
+    await waitFor(() => expect(report).toHaveTextContent("Couldn't load workflow:"));
+    expect(report).toHaveTextContent("Workflow check: FAIL");
   });
 });

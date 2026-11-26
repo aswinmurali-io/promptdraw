@@ -30,6 +30,7 @@ import { writeClipboard } from "./lib/clipboard";
 import { useChasedView } from "./lib/useChasedView";
 import { CONFIG_FILE, OPEN_ACCEPT, configJson, downloadText, importFile, importText, workflowYaml, type ImportResult } from "./lib/files";
 import { decodePayload, LinkError, parseLinkHash } from "./lib/link";
+import { checkWorkflow, type CheckResult } from "./lib/check";
 import { isCheckMode } from "./state/checkMode";
 import { CheckReport } from "./components/CheckReport";
 
@@ -345,8 +346,31 @@ export function App() {
   };
   const openLinkRef = useRef(openLink);
   openLinkRef.current = openLink;
+  // Check mode: read the link once, show the workflow on Stages with no discard guard (the page
+  // started from defaults) and keep the fragment, so a reload re-runs the check.
+  const [check, setCheck] = useState<CheckResult | null>(null);
+  const runCheck = async () => {
+    const link = parseLinkHash(location.hash);
+    if (!link) return;
+    let text: string;
+    try {
+      text = await decodePayload(link.payload);
+    } catch (e) {
+      return setCheck({ ok: false, error: e instanceof LinkError ? e.message : "the link could not be read" });
+    }
+    const result = checkWorkflow(text);
+    setCheck(result);
+    const res = importText(LINK_FILE, text, cfgRef.current);
+    if (!res.ok) return;
+    dispatch({ type: "replace", cfg: res.cfg });
+    stages.loaded(res.cfg.workflow);
+  };
+  const runCheckRef = useRef(runCheck);
+  runCheckRef.current = runCheck;
+
   useEffect(() => {
-    if (!isCheckMode()) void openLinkRef.current();
+    if (isCheckMode()) void runCheckRef.current();
+    else void openLinkRef.current();
     // Check mode is decided once per page load: a link that changes it, or any new link in a
     // check-mode page, reloads the page into the right mode.
     const onHash = () => {
@@ -673,7 +697,7 @@ export function App() {
 
       <GitHubRibbon />
 
-      {isCheckMode() && <CheckReport />}
+      {isCheckMode() && <CheckReport result={check} />}
 
       <div className="region region--bottom-right">
         <button type="button" className="tool-btn help-trigger island" aria-label="Help: keyboard shortcuts" aria-keyshortcuts="?" data-tooltip={"Keyboard shortcuts (?)\nEvery key and gesture in one list"} onClick={ctx.openShortcuts}>

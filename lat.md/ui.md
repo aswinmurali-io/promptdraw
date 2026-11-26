@@ -124,6 +124,8 @@ A `&check` link lets an agent check a workflow in any browser, even the user's o
 
 [[src/main.tsx]] calls [[src/ui/state/checkMode.ts#initCheckMode]] before the first render. For a check link it swaps `localStorage` for an in-memory [[src/ui/state/checkMode.ts#MemoryStorage]], so the page starts from defaults, every save (autosave, prefs, library, intro) vanishes with the page, and [[src/ui/state/persistence.ts#useAutosave]] skips the `storage` listener so other tabs' saves never reach it. There is no intro video, welcome or discard guard. [[src/ui/components/CheckReport.tsx#CheckReport]] shows "Check mode: nothing is saved" with **Open for real**, which loads the same link without `&check`.
 
+The page loads the link's workflow onto Stages without the discard guard and keeps the fragment, so a reload re-runs the check. Its island prints [[src/ui/lib/check.ts#reportText]] of [[src/ui/lib/check.ts#checkWorkflow]] as plain text in a "Workflow check" region: `Workflow check: PASS` or `FAIL`; `Couldn't load workflow: <reason>` on a parse or link error; otherwise the name and counts (blocks, parallel groups, loops), `Warnings: none` or the load warnings, and `Round trip: identical` or `Round trip: the app would rewrite this file` with the first five differing lines. The round trip compares the file with what `toYaml` writes back, ignoring comment lines and line endings, so a misspelled key the faithful parser skips still fails. Pass means no load error, no warnings and an identical round trip.
+
 The mode is fixed per page load ([[src/ui/state/checkMode.ts#isCheckMode]]): a `hashchange` in a check-mode page, or to a check link in a normal one, reloads the page.
 
 ## Tests
@@ -143,6 +145,18 @@ A link pasted into a tab with unsaved stage edits asks first, and Cancel keeps t
 ### Check mode never touches saved data
 
 With a check link, saved keys stay unread and every write lands in memory only; a normal link leaves the real storage in place.
+
+### Check report passes a canonical workflow
+
+A starter written by `toYaml` checks as PASS with no warnings, an identical round trip and its loop count.
+
+### Check report catches misspelled keys
+
+A stage with `promt:` parses cleanly but fails the round trip, and the report names the differing line.
+
+### Check mode reports on the workflow
+
+A check link opens on Stages with the banner, no intro video, a PASS report, and the fragment kept for a re-check.
 
 ### Broken workflow links change nothing
 

@@ -1,8 +1,10 @@
-// The check-mode island: says nothing is saved and offers to open the link for real.
+// The check-mode island: says nothing is saved, offers to open the link for real, and prints the
+// Workflow check report as plain text an agent can read.
 // @lat: [[ui#Workflow links#Check mode]]
+import { reportText, type CheckResult } from "../lib/check";
 import { buildLink, parseLinkHash } from "../lib/link";
 
-export function CheckReport() {
+export function CheckReport({ result }: { result: CheckResult | null }) {
   const openForReal = () => {
     const link = parseLinkHash(location.hash);
     if (!link) return;
@@ -17,6 +19,9 @@ export function CheckReport() {
           Open for real
         </button>
       </p>
+      <div role="region" aria-label="Workflow check" aria-live="polite">
+        <pre className={`check-report-text${result && !(result.ok && result.pass) ? " is-fail" : ""}`}>{result ? reportText(result) : "Workflow check: reading the link…"}</pre>
+      </div>
     </section>
   );
 }

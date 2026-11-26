@@ -4,7 +4,8 @@
 import { deflateRawSync } from "node:zlib";
 import { expect, openApp, test } from "./helpers";
 
-const YAML = 'name: checked\ngoal: Check me\nblocks:\n  - id: b1\n    type: stage\n    name: Build\n    prompt: build it\n';
+// Canonical (what the app writes back), so the check passes. Core can't load under Playwright.
+const YAML = 'name: checked\nversion: 1\ngoal: Check me\nblocks:\n  - id: b1\n    type: stage\n    name: Build\n    prompt: build it\nparallels: []\nloops: []\n';
 const payload = deflateRawSync(Buffer.from(YAML, "utf8")).toString("base64url");
 
 const snapshot = () =>
@@ -29,10 +30,11 @@ test("a check link never touches saved work or other tabs", async ({ page, conte
 
   await page.goto(`/#wf=${payload}&check`);
   await expect(page.getByText("Check mode: nothing is saved")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Workflow check" })).toContainText("Workflow check: PASS");
   await expect(page.getByRole("dialog", { name: /promptdraw in 30 seconds/i })).toHaveCount(0);
   await page.waitForTimeout(700);
 
-  expect(await page.evaluate(() => localStorage.getItem("promptdraw:task"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("promptdraw:task"))).not.toBe("my saved task");
   expect(await other.evaluate(snapshot)).toEqual(before);
   await expect(other.getByRole("main", { name: "Task prompt canvas" })).toBeVisible();
   await expect(other.getByLabel("Task", { exact: true })).toHaveValue("my saved task");

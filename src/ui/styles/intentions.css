@@ -37,6 +37,28 @@
   }
 }
 
+/* How to work closed at tablet widths: the centred toolbar would run under the orange button
+   (and the Menu), so it centres between the two instead, shedding its key badges, then below
+   860px its words but Copy prompt's. */
+@media (min-width: 731px) and (max-width: 1040px) {
+  .app[data-mode="task"][data-work="closed"] .region--top-center {
+    left: calc(var(--island-inset) + 5rem + var(--space) * 2);
+    right: calc(var(--island-inset) + 7.5rem + var(--space) * 2);
+    justify-content: safe center;
+    transform: none;
+  }
+
+  .app[data-mode="task"][data-work="closed"] .toolbar .tool-key {
+    display: none;
+  }
+}
+
+@media (min-width: 731px) and (max-width: 860px) {
+  .app[data-mode="task"][data-work="closed"] .toolbar .tool-btn:not(.tool-primary) .tool-label {
+    display: none;
+  }
+}
+
 .app[data-work="open"] .region--bottom-right {
   right: calc(var(--work-w) + var(--island-inset));
 }

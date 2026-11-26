@@ -7,6 +7,16 @@
   color: var(--text-primary);
 }
 
+/* On desktop the card is centred over the board and keeps 1.5rem clear of both sheet edges, so
+   the Star ribbon beside a docked panel never cuts its top-right corner. */
+@media (min-width: 731px) {
+  .welcome-card {
+    box-sizing: border-box;
+    width: min(46rem, 100% - 3rem);
+    margin-inline: auto;
+  }
+}
+
 .welcome-wordmark {
   margin: 0;
   font-size: 2.1rem;
@@ -49,7 +59,7 @@
   container-type: inline-size;
 }
 
-@container (max-width: 40rem) {
+@container (max-width: 34rem) {
   .welcome-steps {
     gap: 0.3rem 1.3rem;
   }
@@ -139,6 +149,14 @@
   margin-left: 0.35rem;
   padding-left: 0.6rem;
   border-left: 1px solid var(--border);
+}
+
+/* Beside a docked panel the card is short of room: the quick actions drop their key chips
+   (their tooltips and the shortcuts list keep them) so the row stays one line. */
+@container (max-width: 44rem) {
+  .welcome-action kbd {
+    display: none;
+  }
 }
 
 /* Touch screens: no key chips, no keyboard-only actions, a smaller wordmark, so the card

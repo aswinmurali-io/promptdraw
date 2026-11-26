@@ -501,7 +501,8 @@
 }
 
 /* Left to right on every screen, as the Stages flow runs, from the Goal card; the board pans to
-   whatever runs past the screen. */
+   whatever runs past the screen. It centres in the sheet while it fits (auto margins fall to 0
+   once it runs wider, so a long board still starts at the left gutter). */
 .app .task-canvas {
   position: relative;
   display: flex;
@@ -509,6 +510,7 @@
   align-items: flex-start;
   gap: 0;
   width: max-content;
+  margin-inline: auto;
 }
 
 /* The Task fields at the top of How to work: the Stages Goal card (lavender fill, accent

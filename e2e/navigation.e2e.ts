@@ -88,8 +88,8 @@ test.describe("Task board", () => {
   test("wheel pans and Ctrl+wheel zooms toward the pointer", async ({ page }) => {
     const [x, y] = await emptyPoint(page, ".task-viewport");
     await page.mouse.move(x, y);
-    await page.mouse.wheel(0, 200);
-    await expect.poll(() => taskTransform(page)).toContain("translate(0px, -200px)");
+    await page.mouse.wheel(0, 120);
+    await expect.poll(() => taskTransform(page)).toContain("translate(0px, -120px)");
     await page.keyboard.down("Control");
     await page.mouse.wheel(0, -40);
     await page.keyboard.up("Control");

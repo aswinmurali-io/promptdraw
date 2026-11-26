@@ -15,8 +15,12 @@ describe("ribbonEdge", () => {
     expect(ribbonEdge(1440, [menu, box(231, 12, 577, 56), box(720, 0, 1440, 900)])).toBe(720);
   });
 
-  it("steps left of the How to work button in the corner", () => {
-    expect(ribbonEdge(1440, [menu, box(547, 12, 893, 56), box(1310, 12, 1428, 56)])).toBe(1310);
+  it("hides rather than hang beside the How to work button", () => {
+    expect(ribbonEdge(1440, [menu, box(547, 12, 893, 56), box(1310, 12, 1428, 56)])).toBeNull();
+  });
+
+  it("hides rather than hang above a floating panel like the starters", () => {
+    expect(ribbonEdge(1100, [menu, box(300, 12, 800, 56), box(1012, 12, 1088, 56), box(700, 68, 1088, 600)])).toBeNull();
   });
 
   it("hides when the toolbar reaches under the band", () => {

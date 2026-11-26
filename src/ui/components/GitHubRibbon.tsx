@@ -1,7 +1,7 @@
-// A "Star me on GitHub" corner ribbon, stitched like the classic "Fork me on GitHub" one. It sits in the top-right corner of the free canvas: left of
-// whatever holds the right edge's top (How to work, the Prompt panel, the stage inspector, the
-// starters, the How to work button, the tablet stage bar), and it steps aside entirely when the
-// top row has no room for it, so it never covers a close button or a tool.
+// A "Star me on GitHub" corner ribbon, stitched like the classic "Fork me on GitHub" one. It sits in the top-right corner of the free canvas: the window's
+// corner, or left of a panel docked from the window's top (How to work, the Prompt panel, the
+// stage inspector). It steps aside entirely otherwise, so it never covers a close button or a
+// tool and its cut end never hangs in open canvas beside a short or floating island.
 // @lat: [[ui#Islands]]
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { ISLANDS, REPO_URL, boxOf, ribbonEdge, type Box } from "../lib/ribbon";

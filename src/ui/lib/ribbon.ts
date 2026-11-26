@@ -56,13 +56,20 @@ function hits(b: Box, edge: number, size: number): boolean {
   return l - bt <= BAND_HI && r - t >= BAND_LO;
 }
 
+/** Whether an island is a panel docked to the window's top and right that runs past the square's
+ *  foot, so its left side closes the corner and the band's cut end lies against it, not open canvas. */
+function docked(b: Box, width: number, size: number): boolean {
+  return b.top <= 1 && b.bottom >= size && b.right >= width - 24;
+}
+
 /**
  * Where the ribbon's right side goes (px from the window's left), or null when it has no room:
- * the window's corner when nothing sits under the band there, else just left of the first island
- * holding the right edge's top that leaves the band clear.
+ * the window's corner when nothing sits under the band there, else just left of the first docked
+ * panel that leaves the band clear. Short or floating islands (the How to work button, the
+ * starters) never anchor it: the band's cut end would hang in the canvas.
  */
 export function ribbonEdge(width: number, boxes: Box[], size = SIZE): number | null {
-  const edges = [width, ...boxes.filter((b) => b.top < size && b.right >= width - 24).map((b) => b.left)].sort((a, b) => b - a);
+  const edges = [width, ...boxes.filter((b) => docked(b, width, size)).map((b) => b.left)].sort((a, b) => b - a);
   for (const e of edges) if (e >= size && !boxes.some((b) => hits(b, e, size))) return e;
   return null;
 }

@@ -149,8 +149,8 @@ test.describe("first run", () => {
   });
 
   test("a greyed-out stage tool stays focusable and its tooltip says what it needs, over the Prompt panel", async ({ page }) => {
-    if (!(await page.locator(".output-panel").count())) await page.keyboard.press("4");
     await page.keyboard.press("2");
+    await page.keyboard.press("4");
     await page.keyboard.press("s");
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
@@ -266,7 +266,7 @@ test.describe("first run", () => {
 });
 
 test.describe("stages", () => {
-  test.beforeEach(async ({ page }) => openApp(page));
+  test.beforeEach(async ({ page }) => openApp(page, { stagesPrompt: true }));
 
   test("opens on the flow even after an untouched view was remembered", async ({ page }) => {
     // Linger on the Task tab (the old code saved the default view here), then come back.
@@ -595,7 +595,7 @@ test.describe("phone", () => {
 
   test("opens no panel on a first visit; a panel is a sheet down to the screen edge", async ({ page }) => {
     await openApp(page);
-    await expect(page.locator(".output-text")).toHaveCount(0);
+    await expect(page.locator(".output-text:visible")).toHaveCount(0);
     await expect(page.getByRole("complementary", { name: "Settings" })).toHaveCount(0);
     await page.getByRole("toolbar", { name: "Modes and panels" }).getByRole("button", { name: "Prompt panel" }).click();
     const sheet = await box(page, ".output-panel");
@@ -681,8 +681,8 @@ test.describe("phone", () => {
 
   test("with the Prompt sheet open the Stages tab shows the flow above the sheet", async ({ page }) => {
     await openApp(page);
-    await page.getByRole("toolbar", { name: "Modes and panels" }).getByRole("button", { name: "Prompt panel" }).click();
     await page.getByRole("button", { name: /^Stages/ }).click();
+    await page.getByRole("toolbar", { name: "Modes and panels" }).getByRole("button", { name: "Prompt panel" }).click();
     const sheet = await box(page, ".output-panel");
     await expect.poll(async () => {
       const g = (await page.locator('.sk-card[data-key="goal"]').boundingBox())!;

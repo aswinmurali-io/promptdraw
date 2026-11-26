@@ -152,7 +152,7 @@ describe("intention toggles", () => {
   });
 
   it("lists the demo workflows on an empty Stages board and hides them once one opens", () => {
-    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showOutput: false, zoom: 100, welcomeDismissed: true }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showPrompt: false, zoom: 100, welcomeDismissed: true }));
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Stages" }));
     const demos = screen.getByRole("complementary", { name: "Demo workflows" });
@@ -160,8 +160,21 @@ describe("intention toggles", () => {
     expect(screen.queryByRole("complementary", { name: "Demo workflows" })).toBeNull();
   });
 
+  // @lat: [[ui#Tests#Stages opens without the Prompt panel]]
+  it("opens Stages the first time with no Prompt panel, then remembers it once shown", () => {
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showOutput: true, zoom: 100, welcomeDismissed: true }));
+    const { unmount } = render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Stages" }));
+    expect(document.querySelector(".output-panel")).toBeNull();
+    fireEvent.keyDown(document.body, { key: "4" });
+    expect(document.querySelector(".output-panel")).not.toBeNull();
+    unmount();
+    render(<App />);
+    expect(document.querySelector(".output-panel")).not.toBeNull();
+  });
+
   it("opens the Prompt from the board", () => {
-    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showOutput: false, zoom: 100, welcomeDismissed: true }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showPrompt: false, zoom: 100, welcomeDismissed: true }));
     render(<App />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Multiple workers/ }));
     fireEvent.click(within(screen.getByRole("region", { name: "How the task runs" })).getByRole("button", { name: /prompt/i }));
@@ -260,7 +273,7 @@ describe("intention toggles", () => {
 
 describe("properties panel", () => {
   // Settings starts closed on a first visit; these tests open it as a returning visitor would.
-  beforeEach(() => localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showOutput: true, zoom: 100, welcomeDismissed: true })));
+  beforeEach(() => localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showPrompt: true, zoom: 100, welcomeDismissed: true })));
 
   it("edits workspace settings and the prompt follows", () => {
     render(<App />);
@@ -353,6 +366,7 @@ describe("keyboard shortcuts and dialogs", () => {
     fireEvent.keyDown(document.body, { key: "2" });
     expect(screen.getByRole("main", { name: "Stages canvas" })).toBeInTheDocument();
     expect(document.getElementById("stages-canvas-mount")).not.toBeNull();
+    fireEvent.keyDown(document.body, { key: "4" });
     expect(output()).toMatch(/^## Workflow/);
     fireEvent.keyDown(document.body, { key: "1" });
     const task = screen.getByLabelText("Task");
@@ -363,6 +377,7 @@ describe("keyboard shortcuts and dialogs", () => {
   // @lat: [[ui#Tests#Settings live in the Intentions block on Stages]]
   it("keeps the Stages settings in the Intentions inspector, and Settings opens it", () => {
     localStorage.setItem("promptdraw:config", JSON.stringify({ tab: "stages", workflow: { name: "w", goal: "g", blocks: [{ id: "intentions", type: "intentions", toggles: [] }] } }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showPrompt: true }));
     render(<App />);
     expect(document.querySelector(".settings-panel")).toBeNull();
     fireEvent.keyDown(document.body, { key: "3" });
@@ -719,6 +734,8 @@ describe("persistence", () => {
     const { unmount } = render(<App />);
     fireEvent.keyDown(document.body, { key: "2" });
     fireEvent.keyDown(document.body, { key: "4" });
+    expect(screen.getByTestId("prompt-output")).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "4" });
     unmount();
     render(<App />);
     expect(screen.queryByTestId("prompt-output")).toBeNull();
@@ -772,7 +789,7 @@ describe("intro video", () => {
 
   it("skips returning visitors who already have saved prefs, and Escape also marks it seen", () => {
     localStorage.removeItem("promptdraw:intro");
-    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showOutput: true, zoom: 100, welcomeDismissed: true }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showPrompt: true, zoom: 100, welcomeDismissed: true }));
     const { unmount } = render(<App />);
     expect(screen.queryByRole("dialog", { name: "promptdraw in 30 seconds" })).toBeNull();
     unmount();
@@ -793,6 +810,7 @@ describe("intro video", () => {
 
 describe("drag and drop", () => {
   it("loads a workflow YAML dropped on the canvas", async () => {
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showPrompt: true }));
     render(<App />);
     const yaml = "name: dropped\ngoal: Ship it\nblocks:\n  - id: b1\n    type: stage\n    name: Build\n    prompt: build it\n";
     const file = new File([yaml], "dropped.yaml", { type: "text/yaml" });
@@ -811,9 +829,11 @@ describe("workflow links", () => {
   const sprintLink = async () => "#wf=" + (await encodePayload(toYaml(new Workflow(starterWorkflow("sprint-chaser")!))));
   const seedUnsaved = () => {
     localStorage.setItem("promptdraw:config", serializeAppConfig({ ...appDefaults(), tab: "stages", workflow: sample().toDict() }));
-    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showOutput: true, zoom: 100, welcomeDismissed: true }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showPrompt: true, zoom: 100, welcomeDismissed: true }));
   };
 
+  // These read the compiled prompt: a returning user with the Stages Prompt panel shown.
+  beforeEach(() => localStorage.setItem("promptdraw:prefs", JSON.stringify({ showPrompt: true })));
   afterEach(() => history.replaceState(null, "", location.pathname));
 
   // @lat: [[ui#Tests#Workflow links open on Stages]]

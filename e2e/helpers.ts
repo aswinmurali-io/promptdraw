@@ -15,15 +15,19 @@ export const test = base.extend<{ motion: boolean }>({
 });
 export { expect };
 
-/** Fresh app: no stored state, welcome dismissed, fonts loaded. */
-export async function openApp(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+/**
+ * Fresh app: no stored state, fonts loaded. `stagesPrompt` starts as a returning user who left
+ * the Prompt panel shown on Stages (a first visit opens Stages without it).
+ */
+export async function openApp(page: Page, { stagesPrompt = false }: { stagesPrompt?: boolean } = {}): Promise<void> {
+  await page.addInitScript((prompt) => {
     if (sessionStorage.getItem("e2e-init")) return;
     sessionStorage.setItem("e2e-init", "1");
     localStorage.clear();
     // Suites test the app itself, not the first-visit intro video.
     localStorage.setItem("promptdraw:intro", "seen");
-  });
+    if (prompt) localStorage.setItem("promptdraw:prefs", JSON.stringify({ showPrompt: true }));
+  }, stagesPrompt);
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByRole("toolbar", { name: "Modes and panels" })).toBeVisible();

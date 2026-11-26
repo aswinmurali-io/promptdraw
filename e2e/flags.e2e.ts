@@ -18,7 +18,7 @@ const WORKFLOW = {
 async function open(page: Page): Promise<void> {
   await openApp(page);
   await page.evaluate((wf) => localStorage.setItem("promptdraw:config", JSON.stringify({ workflow: wf, tab: "stages" })), WORKFLOW);
-  await page.evaluate(() => localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showOutput: true, zoom: 100, welcomeDismissed: true })));
+  await page.evaluate(() => localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: false, showPrompt: true, zoom: 100, welcomeDismissed: true })));
   await page.reload();
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator(".sk-fork")).toBeAttached();

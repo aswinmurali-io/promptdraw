@@ -40,10 +40,17 @@ describe("persistence", () => {
   });
 
   it("round-trips and clamps prefs", () => {
-    savePrefs({ showProps: false, showOutput: true, zoom: 130, welcomeDismissed: true, workClosed: true });
-    expect(loadPrefs()).toEqual({ showProps: false, showOutput: true, zoom: 130, welcomeDismissed: true, workClosed: true });
+    savePrefs({ showProps: false, showPrompt: true, zoom: 130, welcomeDismissed: true, workClosed: true });
+    expect(loadPrefs()).toEqual({ showProps: false, showPrompt: true, zoom: 130, welcomeDismissed: true, workClosed: true });
     localStorage.setItem(STORAGE_KEYS.prefs, JSON.stringify({ zoom: 9000 }));
     expect(loadPrefs().zoom).toBe(100);
+  });
+
+  // @lat: [[ui#Tests#Stages opens without the Prompt panel]]
+  it("keeps the Prompt panel closed until asked for, ignoring the old always-on preference", () => {
+    expect(DEFAULT_PREFS.showPrompt).toBe(false);
+    localStorage.setItem(STORAGE_KEYS.prefs, JSON.stringify({ showOutput: true, zoom: 100 }));
+    expect(loadPrefs().showPrompt).toBe(false);
   });
 
   it("stamps each save later than the last", () => {

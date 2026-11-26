@@ -42,7 +42,7 @@ On wide screens it runs the window's full height against the right edge. The too
 
 A divider splits the panel: the Task fields above take 40% of its height and the options scroll below. Drag it, move it with the arrow keys (Home and End for 20% and 80%), or double-click it back to 40%; the split is remembered per browser (`promptdraw:workSplit`). On phones the sheet scrolls as one, with no divider. Every part of the panel shares one 12px side inset. On phones it stays a sheet with no ×.
 
-It holds the right edge the way the stage inspector does on Stages: the Prompt panel (toolbar Prompt, `4`, or the board's Prompt node) takes the same place at the same width and hands it back when closed, the panel staying mounted while hidden. The toolbar's Prompt button shows pressed only while the Prompt panel shows; on Stages the remembered Prompt panel behaves as before. On phones the handle sits above the tab bar and steps aside while another sheet is open.
+It holds the right edge the way the stage inspector does on Stages: the Prompt panel (toolbar Prompt, `4`, or the board's Prompt node) takes the same place at the same width and hands it back when closed, the panel staying mounted while hidden. The toolbar's Prompt button shows pressed only while the Prompt panel shows; on Stages the Prompt panel is remembered on its own (`showPrompt` in prefs), closed until first shown there, so asking for the prompt on the Simple task tab never opens it on Stages. On phones the handle sits above the tab bar and steps aside while another sheet is open.
 
 A search field stays at the top of the list: [[src/ui/lib/intentGroups.ts#filterGroups]] keeps the rows whose name, sentence, prompt line or run title hold every word typed, hides empty runs, and says so when nothing matches; Escape clears it.
 
@@ -110,7 +110,7 @@ A brand-new browser opens on a 30-second video of promptdraw at work, in a dialo
 
 The browser keeps the config as the Python app's own `.prompt_builder.json` text, so storage and file export share one format.
 
-- [[src/ui/state/persistence.ts#STORAGE_KEYS]]: `promptdraw:config` holds `serializeAppConfig(cfg)`; `promptdraw:task` the task (the Python app never saved it); `promptdraw:prefs` open panels, zoom and whether the welcome was dismissed (a first visit opens only the Prompt panel, none on a phone: [[src/ui/state/persistence.ts#DEFAULT_PREFS]], [[src/ui/state/persistence.ts#hasPrefs]]); `promptdraw:theme` the theme, applied before first paint by an inline script; `promptdraw:intro` is `seen` once the [[ui#App shell#Intro video]] has been closed.
+- [[src/ui/state/persistence.ts#STORAGE_KEYS]]: `promptdraw:config` holds `serializeAppConfig(cfg)`; `promptdraw:task` the task (the Python app never saved it); `promptdraw:prefs` open panels, zoom and whether the welcome was dismissed (a first visit opens no side panel, so Stages opens on its canvas; the Stages Prompt panel is stored as `showPrompt`, a new name so the old always-on `showOutput` is ignored: [[src/ui/state/persistence.ts#DEFAULT_PREFS]], [[src/ui/state/persistence.ts#hasPrefs]]); `promptdraw:theme` the theme, applied before first paint by an inline script; `promptdraw:intro` is `seen` once the [[ui#App shell#Intro video]] has been closed.
 - Saves are debounced by [[src/ui/state/persistence.ts#SAVE_DEBOUNCE_MS]] (300 ms) and flushed when the tab hides or closes; each save stamps `promptdraw:savedAt` last, later than any stamp already stored.
 - [[src/ui/state/persistence.ts#useAutosave]] reacts only to a newer `savedAt` from another tab, skips it while this tab has unsaved edits (they win when they save) and ignores saves whose [[src/ui/state/persistence.ts#sharedContent]] matches. The store takes the rest as one undoable `external` step that keeps this tab's `tab` and `mode`.
 - Opening or dropping a file goes through [[src/ui/lib/files.ts#importText]]: a `.json` file loads through `loadAppConfig` (keeping the typed task); a `.yaml` file loads a workflow through `fromYaml`, switches to Stages and lists any load warnings.
@@ -167,6 +167,10 @@ A check link opens on Stages with the banner, no intro video, a PASS report, and
 ### Check mode shows no welcome
 
 A check link that fails to load leaves the page on the Task tab, where the welcome card and arrows still stay hidden, so an agent reads only the report.
+
+### Stages opens without the Prompt panel
+
+A first visit, or a browser that only has the old always-on `showOutput` preference, opens Stages with no Prompt panel; once shown there it is remembered across reloads.
 
 ### Use with an AI agent
 

@@ -113,7 +113,7 @@ test.describe("Task board", () => {
 
 test.describe("Stages canvas", () => {
   test.beforeEach(async ({ page }) => {
-    await openApp(page);
+    await openApp(page, { stagesPrompt: true });
     await page.keyboard.press("2");
     await expect(page.getByTestId("stage-surface")).toBeVisible();
     await settle(page);

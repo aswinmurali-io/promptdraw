@@ -76,10 +76,10 @@ export function App() {
   const [prefs, setPrefs] = useState<Prefs>(() => {
     const p = loadPrefs();
     // On a phone a panel is a sheet over the canvas: the first visit opens none, later ones one.
-    if (narrow() && !hasPrefs()) return { ...p, showProps: false, showOutput: false };
-    return p.showProps && p.showOutput && narrow() ? { ...p, showProps: false } : p;
+    if (narrow() && !hasPrefs()) return { ...p, showProps: false, showPrompt: false };
+    return p.showProps && p.showPrompt && narrow() ? { ...p, showProps: false } : p;
   });
-  const { showProps, showOutput, zoom } = prefs;
+  const { showProps, zoom } = prefs;
   useMotionReady();
   // Switching tabs: the new canvas fades in.
   const canvasRef = useRef<HTMLElement>(null);
@@ -103,12 +103,15 @@ export function App() {
   // Open (never toggle) a side panel; on narrow screens one panel at a time, as a sheet.
   // On the Simple task tab the right edge belongs to How to work; the Prompt panel takes it over
   // only when asked for there (Prompt in the toolbar, the board's Prompt node), and hands it back
-  // when closed. Stages keeps the remembered Prompt panel as before.
+  // when closed. Stages keeps its own remembered Prompt panel (`showPrompt`, closed until first
+  // asked for there), so asking for the prompt on this tab never opens it on Stages.
   const [taskPrompt, setTaskPrompt] = useState(false);
   const showPromptPanel = useCallback(() => {
-    setTaskPrompt(true);
-    patchPrefs(() => (narrow() ? { showOutput: true, showProps: false } : { showOutput: true }));
-  }, [patchPrefs]);
+    if (cfg.tab !== "stages") {
+      setTaskPrompt(true);
+      if (narrow()) patchPrefs({ showProps: false });
+    } else patchPrefs(() => (narrow() ? { showPrompt: true, showProps: false } : { showPrompt: true }));
+  }, [patchPrefs, cfg.tab]);
   const onToggle = useCallback((key: ToggleKey, on: boolean) => dispatch({ type: "toggle", key, on }), [dispatch]);
   const [copied, setCopied] = useState(false);
   // An empty task or goal is a quiet "to do" note until you try to copy with it still empty;
@@ -222,7 +225,7 @@ export function App() {
   const setWorkspace = (key: WorkspaceKey, value: string, coalesce?: string) => dispatch({ type: "workspace", key, value, coalesce });
   const propsShown = showProps && intentionsId === null;
   const intentionsOpen = intentionsId !== null && stages.selection.focus?.kind === "block" && stages.selection.focus.id === intentionsId;
-  const promptShown = showOutput && (onStages || taskPrompt);
+  const promptShown = onStages ? prefs.showPrompt : taskPrompt;
   const canMoveFocused = (d: -1 | 1): boolean => {
     const f = stages.selection.focus;
     if (f?.kind === "block") return stages.scene.wf.canMove(f.id, d);
@@ -395,7 +398,7 @@ export function App() {
     // On narrow screens the panels overlay the canvas, so only one is open at a time.
     toggleProps: () => {
       if (intentionsId !== null) return stages.setFocus(intentionsOpen ? null : { kind: "block", id: intentionsId });
-      patchPrefs((p) => (!p.showProps && narrow() ? { showProps: true, showOutput: false } : { showProps: !p.showProps }));
+      patchPrefs((p) => (!p.showProps && narrow() ? { showProps: true, showPrompt: false } : { showProps: !p.showProps }));
     },
     showWork: !onStages && !promptShown && !prefs.workClosed,
     toggleWork: () => {
@@ -406,7 +409,7 @@ export function App() {
     },
     toggleOutput: () => {
       if (!onStages) return promptShown ? setTaskPrompt(false) : showPromptPanel();
-      patchPrefs((p) => (!p.showOutput && narrow() ? { showOutput: true, showProps: false } : { showOutput: !p.showOutput }));
+      patchPrefs((p) => (!p.showPrompt && narrow() ? { showPrompt: true, showProps: false } : { showPrompt: !p.showPrompt }));
     },
     copyPrompt: () => void copyPrompt(),
     openFile: () => fileRef.current?.click(),
@@ -669,7 +672,7 @@ export function App() {
         />
       )}
 
-      {showOutput && (
+      {(!onStages || prefs.showPrompt) && (
         // Hidden, not closed, while the inspector holds the right edge: it keeps its view and
         // scroll, and comes back as the inspector folds away.
         <OutputPanel
@@ -684,7 +687,7 @@ export function App() {
           onFill={fillGap}
           error={compiled.error}
           copied={copied}
-          onClose={() => (onStages ? patchPrefs({ showOutput: false }) : setTaskPrompt(false))}
+          onClose={() => (onStages ? patchPrefs({ showPrompt: false }) : setTaskPrompt(false))}
         />
       )}
 

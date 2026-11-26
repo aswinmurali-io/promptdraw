@@ -21,15 +21,17 @@ export const SAVE_DEBOUNCE_MS = 300;
 
 export interface Prefs {
   showProps: boolean;
-  showOutput: boolean;
+  /** The Prompt panel on the Stages tab (the Simple task tab asks for it each time). Stored under
+   *  a new name: the old `showOutput` defaulted to on, so every browser would open Stages with it. */
+  showPrompt: boolean;
   zoom: number;
   welcomeDismissed: boolean;
   /** How to work closed on the Simple task tab (wide screens; on phones it is a sheet). */
   workClosed: boolean;
 }
 
-/** First run: only the prompt panel is open, beside the Task card (the canvas is the product). */
-export const DEFAULT_PREFS: Prefs = { showProps: false, showOutput: true, zoom: 100, welcomeDismissed: false, workClosed: false };
+/** First run: no side panel; How to work holds the right edge and Stages opens on its canvas. */
+export const DEFAULT_PREFS: Prefs = { showProps: false, showPrompt: false, zoom: 100, welcomeDismissed: false, workClosed: false };
 
 function read(key: string): string | null {
   try {
@@ -94,7 +96,7 @@ export function loadPrefs(): Prefs {
     const p = v as Partial<Prefs>;
     return {
       showProps: typeof p.showProps === "boolean" ? p.showProps : DEFAULT_PREFS.showProps,
-      showOutput: typeof p.showOutput === "boolean" ? p.showOutput : DEFAULT_PREFS.showOutput,
+      showPrompt: typeof p.showPrompt === "boolean" ? p.showPrompt : DEFAULT_PREFS.showPrompt,
       zoom: typeof p.zoom === "number" && p.zoom >= 50 && p.zoom <= 200 ? Math.round(p.zoom) : DEFAULT_PREFS.zoom,
       welcomeDismissed: p.welcomeDismissed === true,
       workClosed: p.workClosed === true,

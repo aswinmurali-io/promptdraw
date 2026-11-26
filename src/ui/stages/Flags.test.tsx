@@ -19,7 +19,7 @@ function forked(): WorkflowDict {
 function seed(workflow: WorkflowDict, over: Record<string, unknown> = {}) {
   const cfg = { ...appDefaults(), tab: "stages" as const, workflow, ...over };
   localStorage.setItem("promptdraw:config", serializeAppConfig(cfg));
-  localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showOutput: true, zoom: 100, welcomeDismissed: true }));
+  localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showPrompt: true, zoom: 100, welcomeDismissed: true }));
 }
 
 const surface = () => screen.getByTestId("stage-surface");

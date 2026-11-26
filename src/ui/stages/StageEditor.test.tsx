@@ -18,7 +18,7 @@ function output(): string {
 function seed(workflow: WorkflowDict) {
   const cfg = { ...appDefaults(), tab: "stages" as const, workflow };
   localStorage.setItem("promptdraw:config", serializeAppConfig(cfg));
-  localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showOutput: true, zoom: 100, welcomeDismissed: true }));
+  localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showPrompt: true, zoom: 100, welcomeDismissed: true }));
 }
 
 function card(key: string): Element {
@@ -51,6 +51,8 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("promptdraw:promptView", "markdown");
   localStorage.setItem("promptdraw:intro", "seen");
+  // These tests read the compiled prompt: a returning user with the Stages Prompt panel shown.
+  localStorage.setItem("promptdraw:prefs", JSON.stringify({ showPrompt: true }));
   Object.defineProperty(navigator, "clipboard", { value: { writeText: vi.fn().mockResolvedValue(undefined) }, configurable: true });
 });
 

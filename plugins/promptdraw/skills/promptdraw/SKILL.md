@@ -44,7 +44,10 @@ or copy them from memory: use `reference.md` and `example.yaml` beside this file
      says `Workflow check: PASS`. Take a screenshot of the canvas for the user.
    - **Without one:** say the file is unchecked and that the app lists any problems when
      it opens.
-5. Hand off: the file path, and the **open** link as a short labelled Markdown link, such
+5. Show it: by default, open the **open** link in the user's browser yourself (macOS
+   `open "<url>"`, Linux `xdg-open`, Windows `start ""`) so they see the workflow without
+   asking. Skip this only when the link is over the limit, or the user said not to open it.
+6. Hand off: the file path, and the **open** link as a short labelled Markdown link, such
    as `[Open sprint-chaser in promptdraw](<open link>)`. Never hand off the check link. When
    `link.mjs` says the link is over the limit, give the file only: the user opens it with
    **Open…** (`Cmd/Ctrl+O`) or drops it on the canvas. You may still open the long check

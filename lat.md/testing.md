@@ -10,7 +10,7 @@ Configuration lives in the `test` block of [[vite.config.ts]]; [[src/test/setup.
 
 Run with `npx vite-node scripts/workflow-tool.ts`: `constants` prints allowed values, defaults, templates and toggles; `starters` and `example <key>` show the built-in workflows as YAML; `validate <file>` reports parse warnings and whether the file survives a round trip; `prompt <file>` prints the compiled prompt; `link <file>` prints the open and check links ([[ui#App shell#Workflow links]]).
 
-The skill ships as a Claude Code plugin: `.claude-plugin/marketplace.json` lists `plugins/promptdraw`, whose `skills/promptdraw/` holds `SKILL.md` (write, make links, open the check link in a browser until it passes, hand off the file and the open link), the generated `reference.md` and `example.yaml`, and a dependency-free `link.mjs`. [[scripts/skillReference.ts#renderReference]] and [[scripts/skillReference.ts#renderExample]] render the generated files from `src/core` and the starters; `npm run skill:ref` ([[scripts/skill-ref.ts]]) writes them.
+The skill ships as a Claude Code plugin: `.claude-plugin/marketplace.json` lists `plugins/promptdraw`, whose `skills/promptdraw/` holds `SKILL.md` (write, make links, open the check link in a browser until it passes, open the open link in the user's browser by default, hand off the file and the open link), the generated `reference.md` and `example.yaml`, and a dependency-free `link.mjs`. [[scripts/skillReference.ts#renderReference]] and [[scripts/skillReference.ts#renderExample]] render the generated files from `src/core` and the starters; `npm run skill:ref` ([[scripts/skill-ref.ts]]) writes them.
 
 ### Skill files match the app
 

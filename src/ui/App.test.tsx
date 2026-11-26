@@ -1,8 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { appDefaults, appState, buildPrompt, copyText, TOGGLE_ORDER } from "../core";
+import { appDefaults, appState, buildPrompt, copyText, serializeAppConfig, toYaml, TOGGLE_ORDER, Workflow } from "../core";
+import { sample } from "../test/fixtures";
 import { App } from "./App";
 import { INTENT_GROUPS } from "./lib/intentGroups";
+import { encodePayload } from "./lib/link";
+import { starterWorkflow } from "./stages/starters";
 
 /** On the Simple task tab the Prompt panel shares the right edge with How to work: ask for it. */
 function showPrompt(): void {
@@ -799,5 +802,60 @@ describe("drag and drop", () => {
     expect(output()).toContain("1. **Build** — build it");
     expect(screen.getByRole("main", { name: "Stages canvas" })).toBeInTheDocument();
     expect(screen.getByTestId("stage-surface")).toHaveTextContent("Build");
+  });
+});
+
+describe("workflow links", () => {
+  const sprintGoal = "**Goal:** Burn down this sprint";
+  const sprintLink = async () => "#wf=" + (await encodePayload(toYaml(new Workflow(starterWorkflow("sprint-chaser")!))));
+  const seedUnsaved = () => {
+    localStorage.setItem("promptdraw:config", serializeAppConfig({ ...appDefaults(), tab: "stages", workflow: sample().toDict() }));
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ showProps: true, showOutput: true, zoom: 100, welcomeDismissed: true }));
+  };
+
+  afterEach(() => history.replaceState(null, "", location.pathname));
+
+  // @lat: [[ui#Tests#Workflow links open on Stages]]
+  it("opens a #wf= link on the Stages tab and clears the hash", async () => {
+    history.replaceState(null, "", location.pathname + (await sprintLink()));
+    render(<App />);
+    await waitFor(() => expect(output()).toContain(sprintGoal));
+    expect(screen.getByRole("main", { name: "Stages canvas" })).toBeInTheDocument();
+    expect(screen.getByText("Loaded sprint-chaser from link")).toBeInTheDocument();
+    expect(location.hash).toBe("");
+  });
+
+  // @lat: [[ui#Tests#Workflow links ask before replacing unsaved edits]]
+  it("asks before replacing unsaved stage edits", async () => {
+    seedUnsaved();
+    render(<App />);
+    const link = await sprintLink();
+    await act(async () => {
+      history.replaceState(null, "", location.pathname + link);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    const dlg = await screen.findByRole("alertdialog", { name: "Unsaved changes" });
+    fireEvent.click(within(dlg).getByRole("button", { name: "Cancel" }));
+    expect(output()).toContain("**Goal:** Match the Shop screen");
+    expect(location.hash).toBe("");
+  });
+
+  it("opens a second link pasted into an open tab", async () => {
+    render(<App />);
+    const link = await sprintLink();
+    await act(async () => {
+      history.replaceState(null, "", location.pathname + link);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    await waitFor(() => expect(output()).toContain(sprintGoal));
+  });
+
+  // @lat: [[ui#Tests#Broken workflow links change nothing]]
+  it("reports a broken link and changes nothing", async () => {
+    history.replaceState(null, "", location.pathname + "#wf=!!!");
+    render(<App />);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/^Couldn't load workflow from link:/));
+    expect(screen.getByRole("main", { name: "Task prompt canvas" })).toBeInTheDocument();
+    expect(location.hash).toBe("");
   });
 });

@@ -108,7 +108,7 @@ The browser keeps the config as the Python app's own `.prompt_builder.json` text
 - Saves are debounced by [[src/ui/state/persistence.ts#SAVE_DEBOUNCE_MS]] (300 ms) and flushed when the tab hides or closes; each save stamps `promptdraw:savedAt` last, later than any stamp already stored.
 - [[src/ui/state/persistence.ts#useAutosave]] reacts only to a newer `savedAt` from another tab, skips it while this tab has unsaved edits (they win when they save) and ignores saves whose [[src/ui/state/persistence.ts#sharedContent]] matches. The store takes the rest as one undoable `external` step that keeps this tab's `tab` and `mode`.
 - Opening or dropping a file goes through [[src/ui/lib/files.ts#importText]]: a `.json` file loads through `loadAppConfig` (keeping the typed task); a `.yaml` file loads a workflow through `fromYaml`, switches to Stages and lists any load warnings.
-- Either kind that would change the workflow first asks to discard unsaved stage edits, then resets the stage editor's saved baseline.
+- Either kind that would change the workflow first asks to discard unsaved stage edits, then resets the stage editor's saved baseline. A [[ui#App shell#Workflow links|workflow link]] opens the same way.
 
 ## Workflow links
 
@@ -116,11 +116,25 @@ A link can carry a workflow, so an agent can hand the user a file plus a link th
 
 The shape is `<site>/#wf=<payload>`, with `&check` appended for check mode. [[src/ui/lib/link.ts#encodePayload]] makes the payload: the YAML's UTF-8 bytes, raw DEFLATE, base64url without padding (the same bytes as Node's `zlib.deflateRawSync`). [[src/ui/lib/link.ts#decodePayload]] reverses it and throws [[src/ui/lib/link.ts#LinkError]] for text that isn't base64url, DEFLATE or UTF-8. [[src/ui/lib/link.ts#parseLinkHash]] reads a fragment and [[src/ui/lib/link.ts#buildLink]] writes one against [[src/ui/lib/link.ts#SITE_URL]]; [[src/ui/lib/link.ts#LINK_LIMIT]] (8,000 payload characters) is the most a hand-off shows as a link.
 
+On mount and on `hashchange`, `App` reads a normal `#wf=` link, clears the fragment with `history.replaceState` (a reload doesn't reopen it), decodes it and loads it through [[src/ui/lib/files.ts#importText]] as `link.yaml`. From there it takes the same path as opening a file: unsaved stage edits are guarded, the workflow is replaced, the app switches to Stages and shows the "Loaded with changes" warnings or a "Loaded <name> from link" notice. A link that won't decode or parse shows "Couldn't load workflow from link: <reason>" and changes nothing. The workflow is not saved to the library.
+
 ## Tests
 
 Component tests drive the whole app; unit tests cover the pure helpers.
 
 `App.test.tsx` uses Testing Library: toggling an option changes the prompt and draws it on the board through the Stages renderer (a card's × unticks it; the Prompt card opens its panel; recon fans out into lettered read-only Recon function blocks, the self-loop review and UI intelligence each draw an agentic loop, Inline agent only dims and locks workers and recon, unticking the review unticks its loop), the How to work search filter, closing How to work with its × and bringing it back, the Task fields living in How to work with the board's Goal card reopening them, the 40% divider's keyboard moves, Fit on the Simple task zoom island, the Stages tab's Demo workflows opening a starter, a ticked option's settings under its row (the recon agent cap up to five), Reset from the panel after its dialog, copy (and the empty-task flag with its ask-before-copy dialog), the Prompt panel's Preview (no markdown markers, raw Copy, double-click to the remembered Markdown view; the other prompt tests pin the Markdown view), import by file and by drop, the palette, menu, toolbar, dialogs, undo, zoom, persistence across reloads, the welcome hints and the intro video (opens once on a brand-new browser and stays closed after Start drawing or Escape, skips a returning visitor with saved prefs, reopens from the menu; every other suite marks it seen first). Unit tests cover the store, persistence, the prompt placeholder finder, the greyed-out option reasons, file helpers, key matching, the rail rules (Basic dashboard waiting on and going off with Progress reports), the board's option rows (chains in panel order, locks under Inline agent only, a lone locked dependant) and the fuzzy matcher.
+
+### Workflow links open on Stages
+
+A `#wf=` link to a starter opens it on the Stages canvas with a "from link" notice and leaves the address bar without the fragment.
+
+### Workflow links ask before replacing unsaved edits
+
+A link pasted into a tab with unsaved stage edits asks first, and Cancel keeps the old workflow.
+
+### Broken workflow links change nothing
+
+A payload that isn't base64url reports "Couldn't load workflow from link:" and leaves the app on its old config.
 
 ### Settings live in the Intentions block on Stages
 

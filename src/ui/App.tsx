@@ -28,7 +28,11 @@ import { WelcomeArrows, WelcomeCard } from "./components/WelcomeHints";
 import { boardArea, boardZoom } from "./lib/board";
 import { writeClipboard } from "./lib/clipboard";
 import { useChasedView } from "./lib/useChasedView";
-import { CONFIG_FILE, OPEN_ACCEPT, configJson, downloadText, importFile, workflowYaml } from "./lib/files";
+import { CONFIG_FILE, OPEN_ACCEPT, configJson, downloadText, importFile, importText, workflowYaml, type ImportResult } from "./lib/files";
+import { decodePayload, LinkError, parseLinkHash } from "./lib/link";
+
+/** The name a workflow link loads under (YAML, so it opens as a workflow). */
+const LINK_FILE = "link.yaml";
 import { applyTheme, nextTheme } from "./lib/theme";
 import { hasPrefs, introDue, loadPrefs, loadStored, markIntroSeen, savePrefs, useAutosave, type Prefs } from "./state/persistence";
 import { IntroDialog } from "./components/IntroDialog";
@@ -291,24 +295,60 @@ export function App() {
     [stages.setFocus, stages.editFocused, stages.scene, stages.workflow, openTask, set],
   );
 
+  // Apply an opened file or link: guard unsaved stage edits when the workflow changes (a settings
+  // JSON carries a workflow too), then load it and report warnings or `message`.
+  const applyImport = useCallback(
+    (res: Extract<ImportResult, { ok: true }>, message: string) => {
+      const apply = () => {
+        dispatch({ type: "replace", cfg: res.cfg });
+        if (res.replacesWorkflow) stages.loaded(res.cfg.workflow);
+        if (res.warnings.length) setDialog({ kind: "warnings", title: "Loaded with changes", items: res.warnings });
+        else notify(message);
+      };
+      if (res.replacesWorkflow) stages.discardOk(apply);
+      else apply();
+    },
+    [dispatch, notify, stages],
+  );
+  const cfgRef = useRef(cfg);
+  cfgRef.current = cfg;
+
   const openFiles = useCallback(
     async (files: FileList | File[] | null) => {
       const file = files?.[0];
       if (!file) return;
       const res = await importFile(file, cfg);
       if (!res.ok) return notify(res.message, "error");
-      const apply = () => {
-        dispatch({ type: "replace", cfg: res.cfg });
-        if (res.replacesWorkflow) stages.loaded(res.cfg.workflow);
-        if (res.warnings.length) setDialog({ kind: "warnings", title: "Loaded with changes", items: res.warnings });
-        else notify(res.message);
-      };
-      // A settings JSON carries a workflow too: guard unsaved stage edits as a YAML open does.
-      if (res.replacesWorkflow) stages.discardOk(apply);
-      else apply();
+      applyImport(res, res.message);
     },
-    [cfg, dispatch, notify, stages],
+    [cfg, notify, applyImport],
   );
+
+  // A workflow link (`#wf=<payload>`) opens like a YAML file, on mount and when another link is
+  // pasted into this tab. The fragment is cleared first, so a reload doesn't reopen it.
+  const openLink = async () => {
+    const link = parseLinkHash(location.hash);
+    if (!link || link.check) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    const fail = (why: string) => notify(`Couldn't load workflow from link: ${why}`, "error");
+    let text: string;
+    try {
+      text = await decodePayload(link.payload);
+    } catch (e) {
+      return fail(e instanceof LinkError ? e.message : "the link could not be read");
+    }
+    const res = importText(LINK_FILE, text, cfgRef.current);
+    if (!res.ok) return fail(res.message.replace(`Couldn't load workflow ${LINK_FILE}: `, ""));
+    applyImport(res, `Loaded ${res.cfg.workflow.name} from link`);
+  };
+  const openLinkRef = useRef(openLink);
+  openLinkRef.current = openLink;
+  useEffect(() => {
+    const onHash = () => void openLinkRef.current();
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const ctx: ActionContext = {
     cfg,

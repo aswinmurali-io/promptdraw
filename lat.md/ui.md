@@ -110,6 +110,12 @@ The browser keeps the config as the Python app's own `.prompt_builder.json` text
 - Opening or dropping a file goes through [[src/ui/lib/files.ts#importText]]: a `.json` file loads through `loadAppConfig` (keeping the typed task); a `.yaml` file loads a workflow through `fromYaml`, switches to Stages and lists any load warnings.
 - Either kind that would change the workflow first asks to discard unsaved stage edits, then resets the stage editor's saved baseline.
 
+## Workflow links
+
+A link can carry a workflow, so an agent can hand the user a file plus a link that opens it; the content stays in the URL fragment and never reaches a server.
+
+The shape is `<site>/#wf=<payload>`, with `&check` appended for check mode. [[src/ui/lib/link.ts#encodePayload]] makes the payload: the YAML's UTF-8 bytes, raw DEFLATE, base64url without padding (the same bytes as Node's `zlib.deflateRawSync`). [[src/ui/lib/link.ts#decodePayload]] reverses it and throws [[src/ui/lib/link.ts#LinkError]] for text that isn't base64url, DEFLATE or UTF-8. [[src/ui/lib/link.ts#parseLinkHash]] reads a fragment and [[src/ui/lib/link.ts#buildLink]] writes one against [[src/ui/lib/link.ts#SITE_URL]]; [[src/ui/lib/link.ts#LINK_LIMIT]] (8,000 payload characters) is the most a hand-off shows as a link.
+
 ## Tests
 
 Component tests drive the whole app; unit tests cover the pure helpers.

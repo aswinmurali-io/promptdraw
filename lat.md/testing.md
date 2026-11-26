@@ -20,6 +20,10 @@ The skill ships as a Claude Code plugin: `.claude-plugin/marketplace.json` lists
 
 `link.mjs` links decode with the app's own decoder back to the exact file, Unicode included, end with `&check` for the check link, and honour `--base`.
 
+### Skill link helper runs through symlinks
+
+`link.mjs` run from a symlinked skill folder still prints its links, since a silent no-op would leave the skill's central step with nothing.
+
 ## Ported unit tests
 
 The Python app's Python unit tests are ported one to one, so the port is held to the same specs as the original.

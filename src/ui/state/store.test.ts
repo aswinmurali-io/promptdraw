@@ -74,6 +74,17 @@ describe("store reducer", () => {
     expect(s.cfg.tab).toBe("stages");
   });
 
+  it("a full reset (Menu → Reset) clears the workflow and its flag choices too", () => {
+    const wf = new Workflow({ name: "drop_me" }).toDict();
+    const start = { ...appDefaults(), task: "t", workflow: wf, flags: { fast: true }, tab: "stages" as const };
+    const s = reducer(initialState(start), { type: "reset", workflow: true });
+    expect(s.cfg.task).toBe("");
+    expect(s.cfg.workflow).toEqual(appDefaults().workflow);
+    expect(s.cfg.flags).toEqual(appDefaults().flags);
+    expect(s.cfg.tab).toBe("stages");
+    expect(reducer(s, { type: "undo" }).cfg.workflow.name).toBe("drop_me");
+  });
+
   it("edits a workflow pin on the Stages tab and removes a blank one", () => {
     const wf = new Workflow({ name: "w", workspace: { branch: "new", base: "main" } }).toDict();
     let s = initialState({ ...appDefaults(), tab: "stages", branch: "same", workflow: wf });

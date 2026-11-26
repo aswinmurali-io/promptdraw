@@ -36,7 +36,8 @@ export type StoreAction =
   /** Swap in a whole config (import); undoable. */
   | { type: "replace"; cfg: AppConfig }
   /** The Python app Reset: clear task, notes and every rail setting; keep the workflow and theme. */
-  | { type: "reset" }
+  /** `workflow`: Menu → Reset also clears the open workflow and its flag choices. */
+  | { type: "reset"; workflow?: boolean }
   /** Another tab saved `cfg`: take it as one undoable step, keeping this tab's view and theme. */
   | { type: "external"; cfg: AppConfig }
   | { type: "undo" }
@@ -104,8 +105,14 @@ export function reducer(state: UiState, action: StoreAction): UiState {
       return record(state, editWorkspace(state.cfg, action.key, action.value), action.coalesce ?? null, action.at ?? Date.now());
     case "replace":
       return record(state, action.cfg, null, Date.now());
-    case "reset":
-      return record(state, { ...resetConfig(state.cfg), mode: state.cfg.mode }, null, Date.now());
+    case "reset": {
+      const cfg = { ...resetConfig(state.cfg), mode: state.cfg.mode };
+      if (action.workflow) {
+        const d = appDefaults();
+        Object.assign(cfg, { workflow: d.workflow, flags: d.flags, flag_mode: d.flag_mode });
+      }
+      return record(state, cfg, null, Date.now());
+    }
     case "external":
       return record(state, { ...action.cfg, tab: state.cfg.tab, mode: state.cfg.mode }, null, Date.now());
     case "undo": {

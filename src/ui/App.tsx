@@ -63,7 +63,7 @@ type DialogState =
   | { kind: "intro" }
   | { kind: "agent" }
   | { kind: "palette" }
-  | { kind: "reset" }
+  | { kind: "reset"; workflow: boolean }
   | { kind: "warnings"; title: string; items: string[] }
   | ({ kind: "confirm" } & ConfirmRequest)
   | { kind: "gaps"; gaps: PromptGap[] };
@@ -426,7 +426,7 @@ export function App() {
       downloadText("prompt.md", copyText(latestPrompt()) + "\n", "text/markdown");
       notify("Saved prompt.md");
     },
-    reset: () => setDialog({ kind: "reset" }),
+    reset: () => setDialog({ kind: "reset", workflow: true }),
     undo: () => dispatch({ type: "undo" }),
     redo: () => dispatch({ type: "redo" }),
     setTheme: (mode) => dispatch({ type: "set", patch: { mode }, record: false }),
@@ -661,7 +661,7 @@ export function App() {
 
       {!onStages && <WorkPanel
           task={{ task: cfg.task, extra: cfg.extra, taskRef, onTask: (task) => set({ task }, "task"), onExtra: (extra) => set({ extra }, "extra") }}
-          hidden={promptShown} closed={prefs.workClosed} onClose={() => patchPrefs({ workClosed: true })} cfg={cfg} set={set} state={promptState} onToggle={onToggle} onReset={() => setDialog({ kind: "reset" })} />}
+          hidden={promptShown} closed={prefs.workClosed} onClose={() => patchPrefs({ workClosed: true })} cfg={cfg} set={set} state={promptState} onToggle={onToggle} onReset={() => setDialog({ kind: "reset", workflow: false })} />}
 
       {propsShown && (
         <PropertiesPanel
@@ -744,11 +744,12 @@ export function App() {
       {dialog?.kind === "reset" && (
         <ConfirmDialog
           title="Reset"
-          message="Clear task, notes and all toggles?"
+          message={dialog.workflow ? "Clear task, notes, all toggles and the workflow? Workflows saved in the library stay." : "Clear task, notes and all toggles?"}
           confirm="Reset"
           danger
           onConfirm={() => {
-            dispatch({ type: "reset" });
+            dispatch({ type: "reset", workflow: dialog.workflow });
+            if (dialog.workflow) stages.loaded();
             notify("Reset to defaults (undo with Ctrl/⌘+Z)");
           }}
           onClose={() => setDialog(null)}

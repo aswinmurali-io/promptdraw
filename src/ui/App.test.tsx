@@ -326,6 +326,26 @@ describe("properties panel", () => {
     expect(screen.getByRole("checkbox", { name: /Tests matter/ })).not.toBeChecked();
   });
 
+  // @lat: [[ui#Tests#Menu Reset clears the workflow]]
+  it("clears the workflow too from Menu → Reset, but not from How to work's Reset", () => {
+    localStorage.setItem("promptdraw:prefs", JSON.stringify({ welcomeDismissed: true }));
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Stages" }));
+    fireEvent.click(within(screen.getByRole("complementary", { name: "Demo workflows" })).getByRole("button", { name: "Open the Sprint Chaser demo" }));
+    expect(screen.queryByRole("complementary", { name: "Demo workflows" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Simple task" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+    fireEvent.click(within(screen.getByRole("alertdialog", { name: "Reset" })).getByRole("button", { name: "Reset" }));
+    fireEvent.click(screen.getByRole("button", { name: "Stages" }));
+    expect(screen.queryByRole("complementary", { name: "Demo workflows" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Main menu" }));
+    fireEvent.click(within(screen.getByRole("menu", { name: "Main menu" })).getByRole("menuitem", { name: /Reset/ }));
+    const dialog = screen.getByRole("alertdialog", { name: "Reset" });
+    expect(dialog).toHaveTextContent("workflow");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Reset" }));
+    expect(screen.getByRole("complementary", { name: "Demo workflows" })).toBeInTheDocument();
+  });
+
   it("rejects non-digits in progress minutes and flags a fallback value", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Progress reports/ }));
@@ -583,7 +603,7 @@ describe("main menu", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Tests matter/ }));
     fireEvent.click(within(openMenu()).getByRole("menuitem", { name: /Reset/ }));
     const confirm = screen.getByRole("alertdialog", { name: "Reset" });
-    expect(confirm).toHaveTextContent("Clear task, notes and all toggles?");
+    expect(confirm).toHaveTextContent("Clear task, notes, all toggles and the workflow?");
     fireEvent.click(within(confirm).getByRole("button", { name: "Reset" }));
     expect(screen.getByLabelText("Task")).toHaveValue("");
     expect(output()).not.toContain("**Tests matter**");

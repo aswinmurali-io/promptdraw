@@ -9,7 +9,7 @@ The prompt is compiled from a `useDeferredValue` copy of the config, and the sta
 One reducer holds the Python app's `AppConfig` plus an undo history of snapshots, so every edit path is a pure, testable action.
 
 - [[src/ui/state/store.ts#reducer]] records each edit, merges edits of one field within [[src/ui/state/store.ts#COALESCE_MS]] (typing) into one undo step, keeps up to [[src/ui/state/store.ts#HISTORY_LIMIT]] snapshots, and keeps the theme out of history. [[src/ui/state/store.ts#useStore]] wraps it for React.
-- Reset follows the Python app: it clears the task, notes and every rail setting but keeps the workflow.
+- Reset follows the Python app ([[src/core/config.ts#resetConfig]]): it clears the task, notes and every rail setting but keeps the workflow. Menu → Reset… goes further: the store's `reset` with `workflow` also puts back the default (empty) workflow and its flag choices, in the same undoable step, and the stage editor drops its saved baseline; workflows saved in the library stay.
 - On the Stages tab the workspace controls show the workflow's pins, and editing a pinned key edits the pin (a blank base removes it), as the Python app's `_pin` does.
 - Deliberate difference: The Python app's `show_pinned` copies the pins into the rail's own branch, worktree, commit and base, so they stick after returning to the Task tab. Here [[src/ui/state/store.ts#effectiveWorkspace]] only displays them, so the Task tab keeps its own values and its prompt can differ from the Python app's after a Stages visit.
 
@@ -50,7 +50,7 @@ Rows come in five short runs under small all-caps headings ([[src/ui/lib/intentG
 
 Each row is a hand-drawn check box, the option's name and its one plain sentence ([[src/ui/lib/intentSummaries.ts#INTENT_SUMMARY]], display only, never cut; a toggle with none shows its prompt line held to two lines). A chevron opens the exact prompt line in place without ticking it; screen readers get that line as the checkbox's description. A ticked option with settings of its own ([[src/ui/lib/intentGroups.ts#HAS_OPTIONS]]) shows them right under its row ([[src/ui/components/OptionSettings.tsx#OptionSettings]]: models, minutes, counts, the recon agent cap of at most [[src/core/constants.ts#RECON_COUNT_MAX]], the review loop's passes); they fold away while the option is unticked or locked. On the Simple task tab the Settings panel keeps only the workspace groups and a note saying where the option settings went.
 
-A solid red Reset button beside the search (filled with the danger colour, as destructive actions are) asks, then clears the task, notes and every option, the same as Menu → Reset… (one undoable step; the workflow and theme stay).
+A solid red Reset button beside the search (filled with the danger colour, as destructive actions are) asks, then clears the task, notes and every option (one undoable step; the workflow and theme stay). Menu → Reset… also clears the workflow, and its dialog says so.
 
 Some options only make sense on top of another ([[src/ui/lib/rules.ts#TOGGLE_NEEDS]]): Recon needs Multiple workers (the Python app's rule), Basic dashboard needs Progress reports, since the dashboard shows those reports, and Self-loop code review needs Basic code review, which it loops. Inline agent only locks workers and recon. A locked row keeps its words at full contrast and shows the state with a lock chip under its name saying what it needs and a faded check box. Turning Progress reports off turns the dashboard off with it, and Basic code review its loop ([[src/ui/lib/rules.ts#DROPS_WITH]]); recon keeps the Python app's behaviour, staying ticked while the core leaves it out. The dashboard rule is the app's own: the compiled prompt for any given config is unchanged.
 
@@ -171,6 +171,10 @@ A check link that fails to load leaves the page on the Task tab, where the welco
 ### Stages opens without the Prompt panel
 
 A first visit, or a browser that only has the old always-on `showOutput` preference, opens Stages with no Prompt panel; once shown there it is remembered across reloads.
+
+### Menu Reset clears the workflow
+
+Menu → Reset… also clears the open workflow (the Demo workflows come back on Stages), while How to work's own Reset keeps it.
 
 ### Use with an AI agent
 

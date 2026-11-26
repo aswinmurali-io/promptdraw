@@ -86,7 +86,7 @@ In Stages mode the canvas renders [[src/ui/components/StagesMount.tsx#StagesMoun
 
 A visible way into the agent skill: the **AI agent** button in the bottom-right corner, *Menu → Use with an AI agent* and the palette's `help.agent` all open one dialog.
 
-[[src/ui/components/AgentDialog.tsx#AgentDialog]] shows the two Claude Code install commands ([[src/ui/components/AgentDialog.tsx#INSTALL_COMMANDS]]) with a copy button, an example request, and what comes back: a `.yaml` file and an open link ([[ui#App shell#Workflow links]]). It links to the skill folder on GitHub for other agents. The welcome's "All the shortcuts" hint sits left of Help, clear of the AI agent button.
+[[src/ui/components/AgentDialog.tsx#AgentDialog]] shows the two Claude Code install commands ([[src/ui/components/AgentDialog.tsx#INSTALL_COMMANDS]]) with a copy button, an example request, and what comes back: a `.yaml` file and an open link ([[ui#App shell#Workflow links]]). The dialog reads a step larger than the UI (17px body). Its footer is a sticky-note panel on the amber `--warn-bg` with a hand-drawn *Note* label: links never reach a server, and other agents can copy the skill folder from GitHub. The welcome's "All the shortcuts" hint sits left of Help, clear of the AI agent button.
 
 ## Intro video
 

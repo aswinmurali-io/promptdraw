@@ -18,7 +18,7 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
     if (await writeClipboard(INSTALL_COMMANDS.join("\n"))) setCopied(true);
   };
   return (
-    <Dialog title="Use with an AI agent" onClose={onClose} width="34rem" className="agent-dialog" initialFocus={done}>
+    <Dialog title="Use with an AI agent" onClose={onClose} width="40rem" className="agent-dialog" initialFocus={done}>
       <p className="agent-lead">Let Claude Code draw the workflow for you, in any project. It writes the stages, loops and parallel branches, checks them here, and hands you a link that opens them on this canvas.</p>
       <ol className="agent-steps">
         <li>
@@ -39,8 +39,14 @@ export function AgentDialog({ onClose }: { onClose: () => void }) {
           <span className="agent-step-text">You get a <code>.yaml</code> file and an <strong>Open in promptdraw</strong> link. The link opens the workflow on the Stages tab; the file opens with Open… or a drop.</span>
         </li>
       </ol>
-      <p className="agent-note">The workflow travels in the link’s <code>#</code> fragment, so it never reaches a server. Not using Claude Code? Copy the skill folder from{" "}
-        <a href={SKILL_URL} target="_blank" rel="noopener noreferrer">GitHub</a> into your agent’s skills.</p>
+      <aside className="agent-note" aria-label="Note">
+        <Icon name="note" size={20} />
+        <p>
+          <span className="agent-note-title">Note</span>
+          The workflow travels in the link’s <code>#</code> fragment, so it never reaches a server. Not using Claude Code? Copy the skill folder from{" "}
+          <a href={SKILL_URL} target="_blank" rel="noopener noreferrer">GitHub</a> into your agent’s skills.
+        </p>
+      </aside>
       <div className="dialog-actions">
         <button ref={done} type="button" className="btn btn--primary" onClick={onClose}>
           Done

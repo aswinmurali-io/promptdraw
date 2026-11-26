@@ -147,20 +147,55 @@
 
 /* ---- Use with an AI agent --------------------------------------------- */
 
+/* A reading dialog, scaled up a step from the UI's 15px so the steps read comfortably. */
 .agent-dialog {
   display: flex;
   flex-direction: column;
   gap: calc(var(--space) * 3);
+  font-size: 1.0625rem;
+  line-height: 1.55;
 }
 
-.agent-lead,
-.agent-note {
+.agent-dialog .dialog-title {
+  font-size: 1.35rem;
+}
+
+.agent-lead {
   margin: 0;
   color: var(--text-muted);
 }
 
+/* The footer note: a sticky-note panel with a hand-drawn label. */
 .agent-note {
-  font-size: var(--text-small);
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--space) * 2.5);
+  padding: calc(var(--space) * 3) calc(var(--space) * 3.5);
+  border-radius: var(--radius-lg);
+  background: var(--warn-bg);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+.agent-note > svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: var(--warn-text);
+}
+
+.agent-note p {
+  margin: 0;
+}
+
+.agent-note-title {
+  display: block;
+  font: var(--weight-hand) 1.05rem / 1.3 var(--font-hand);
+  color: var(--warn-text);
+}
+
+.agent-note a {
+  color: inherit;
+  font-weight: var(--weight-label);
 }
 
 .agent-steps {
@@ -193,7 +228,7 @@
 .agent-code pre {
   flex: 1;
   margin: 0;
-  font: 500 var(--text-small) / 1.6 var(--font-mono);
+  font: 500 0.875rem / 1.6 var(--font-mono);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

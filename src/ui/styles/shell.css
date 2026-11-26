@@ -708,3 +708,25 @@
   font-weight: 700;
   line-height: 1.5;
 }
+
+/* ---- Check mode ------------------------------------------------------- */
+
+/* Under the Menu, top left: the check-mode banner and, once a link is read, its report. */
+.check-report {
+  position: absolute;
+  z-index: var(--z-island-raised);
+  top: calc(var(--island-inset) * 2 + var(--button-lg) + var(--island-padding) * 2);
+  left: var(--island-inset);
+  width: min(26rem, calc(100% - var(--island-inset) * 2));
+  max-height: 60%;
+  overflow: auto;
+  padding: calc(var(--space) * 3);
+}
+
+.check-report-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--space) * 3);
+  margin: 0;
+}

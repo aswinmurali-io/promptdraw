@@ -5,6 +5,7 @@
 // @lat: [[ui#Persistence and files]]
 import { useEffect, useRef } from "react";
 import { appDefaults, loadAppConfig, serializeAppConfig, type AppConfig } from "../../core";
+import { isCheckMode } from "./checkMode";
 
 export const STORAGE_KEYS = {
   config: "promptdraw:config",
@@ -149,12 +150,14 @@ export function useAutosave(cfg: AppConfig, onExternal: (cfg: AppConfig) => void
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("beforeunload", flush);
-    window.addEventListener("storage", onStorage);
+    // A check-mode page keeps to itself: other tabs' saves never reach it.
+    const listen = !isCheckMode();
+    if (listen) window.addEventListener("storage", onStorage);
     return () => {
       flush();
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("beforeunload", flush);
-      window.removeEventListener("storage", onStorage);
+      if (listen) window.removeEventListener("storage", onStorage);
     };
   }, []);
 }

@@ -30,6 +30,8 @@ import { writeClipboard } from "./lib/clipboard";
 import { useChasedView } from "./lib/useChasedView";
 import { CONFIG_FILE, OPEN_ACCEPT, configJson, downloadText, importFile, importText, workflowYaml, type ImportResult } from "./lib/files";
 import { decodePayload, LinkError, parseLinkHash } from "./lib/link";
+import { isCheckMode } from "./state/checkMode";
+import { CheckReport } from "./components/CheckReport";
 
 /** The name a workflow link loads under (YAML, so it opens as a workflow). */
 const LINK_FILE = "link.yaml";
@@ -112,7 +114,7 @@ export function App() {
   const [gapsWarned, setGapsWarned] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   // A brand-new browser opens on the intro video (decided before the first prefs save).
-  const [dialog, setDialog] = useState<DialogState>(() => (introDue() ? { kind: "intro" } : null));
+  const [dialog, setDialog] = useState<DialogState>(() => (introDue() && !isCheckMode() ? { kind: "intro" } : null));
   const [dragging, setDragging] = useState(false);
   // The Task board's pan and zoom. Only the zoom is remembered (as a percentage in prefs).
   const [taskView, setTaskView] = useChasedView(() => ({ scrollX: 0, scrollY: 0, zoom: boardZoom(zoom / 100) }));
@@ -344,8 +346,13 @@ export function App() {
   const openLinkRef = useRef(openLink);
   openLinkRef.current = openLink;
   useEffect(() => {
-    const onHash = () => void openLinkRef.current();
-    onHash();
+    if (!isCheckMode()) void openLinkRef.current();
+    // Check mode is decided once per page load: a link that changes it, or any new link in a
+    // check-mode page, reloads the page into the right mode.
+    const onHash = () => {
+      if (isCheckMode() || parseLinkHash(location.hash)?.check) location.reload();
+      else void openLinkRef.current();
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -665,6 +672,8 @@ export function App() {
       )}
 
       <GitHubRibbon />
+
+      {isCheckMode() && <CheckReport />}
 
       <div className="region region--bottom-right">
         <button type="button" className="tool-btn help-trigger island" aria-label="Help: keyboard shortcuts" aria-keyshortcuts="?" data-tooltip={"Keyboard shortcuts (?)\nEvery key and gesture in one list"} onClick={ctx.openShortcuts}>

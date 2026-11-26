@@ -118,6 +118,14 @@ The shape is `<site>/#wf=<payload>`, with `&check` appended for check mode. [[sr
 
 On mount and on `hashchange`, `App` reads a normal `#wf=` link, clears the fragment with `history.replaceState` (a reload doesn't reopen it), decodes it and loads it through [[src/ui/lib/files.ts#importText]] as `link.yaml`. From there it takes the same path as opening a file: unsaved stage edits are guarded, the workflow is replaced, the app switches to Stages and shows the "Loaded with changes" warnings or a "Loaded <name> from link" notice. A link that won't decode or parse shows "Couldn't load workflow from link: <reason>" and changes nothing. The workflow is not saved to the library.
 
+### Check mode
+
+A `&check` link lets an agent check a workflow in any browser, even the user's own profile, without reading or touching their saved work.
+
+[[src/main.tsx]] calls [[src/ui/state/checkMode.ts#initCheckMode]] before the first render. For a check link it swaps `localStorage` for an in-memory [[src/ui/state/checkMode.ts#MemoryStorage]], so the page starts from defaults, every save (autosave, prefs, library, intro) vanishes with the page, and [[src/ui/state/persistence.ts#useAutosave]] skips the `storage` listener so other tabs' saves never reach it. There is no intro video, welcome or discard guard. [[src/ui/components/CheckReport.tsx#CheckReport]] shows "Check mode: nothing is saved" with **Open for real**, which loads the same link without `&check`.
+
+The mode is fixed per page load ([[src/ui/state/checkMode.ts#isCheckMode]]): a `hashchange` in a check-mode page, or to a check link in a normal one, reloads the page.
+
 ## Tests
 
 Component tests drive the whole app; unit tests cover the pure helpers.
@@ -131,6 +139,10 @@ A `#wf=` link to a starter opens it on the Stages canvas with a "from link" noti
 ### Workflow links ask before replacing unsaved edits
 
 A link pasted into a tab with unsaved stage edits asks first, and Cancel keeps the old workflow.
+
+### Check mode never touches saved data
+
+With a check link, saved keys stay unread and every write lands in memory only; a normal link leaves the real storage in place.
 
 ### Broken workflow links change nothing
 

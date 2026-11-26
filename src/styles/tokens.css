@@ -58,6 +58,8 @@
   /* The orange How to work button (closed panel): dark ink on orange passes AA. */
   --work-open-bg: #f08c00;
   --work-open-ink: #1e1e1e;
+  /* The AI agent button's rainbow: stops dark enough to read as text on a white island. */
+  --rainbow: #e8364a, #e2700c, #b98a00, #1f9d55, #2f6fe0, #7c3aed, #e8364a;
   --canvas-filter: none;
 
   /* Elevation */
@@ -155,6 +157,7 @@
   --danger: #ff8787;
   --warn-bg: #3b3020;
   --warn-text: #ffc977;
+  --rainbow: #ff6b7d, #ffa55c, #f7d154, #4fd68b, #63a4ff, #b18cff, #ff6b7d;
   --canvas-filter: invert(93%) hue-rotate(180deg);
   --shadow-island:
     0 0 0.93px 0 rgba(0, 0, 0, 0.4),

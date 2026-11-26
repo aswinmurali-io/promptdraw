@@ -324,6 +324,67 @@
   color: var(--color-primary-darkest);
 }
 
+/* The AI agent button wears a rainbow: a ring that turns around it (a masked conic gradient on
+   ::before, leaving ::after for the tooltip), and a label whose colours flow across it. The icon
+   cycles through the same hues. Reduced motion keeps the colours and stops the movement. */
+@property --agent-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.agent-trigger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--agent-angle), var(--rainbow));
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  animation: agent-ring 4s linear infinite;
+}
+
+.agent-trigger .tool-label {
+  background: linear-gradient(90deg, var(--rainbow)) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: var(--weight-label);
+  animation: agent-flow 3s linear infinite;
+}
+
+.agent-trigger > svg {
+  color: #e8364a;
+  animation: agent-hue 3s linear infinite;
+}
+
+@keyframes agent-ring {
+  to {
+    --agent-angle: 360deg;
+  }
+}
+
+@keyframes agent-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes agent-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-trigger::before,
+  .agent-trigger .tool-label,
+  .agent-trigger > svg {
+    animation: none;
+  }
+}
+
 .agent-trigger::after {
   left: auto;
   right: 0;
